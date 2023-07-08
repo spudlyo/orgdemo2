@@ -133,23 +133,6 @@ The properties above define all the constants we're using throughout this docume
 to meet your own needs. You'll likely want to name things differently. Perhaps you'd like to use a use a different AWS
 region, or maybe a different version of MySQL. The properties above is where you can change these things.
 
-* Properties as Header Args                                        :noexport:
-:PROPERTIES:
-:header-args:       :noweb yes :exports both :cache yes
-:header-args:sql:   :cmdline -N 2>/dev/null :engine mysql
-:header-args:bash:  :results output
-:header-args:bash+: :var RDS=get_prop("rds") REPLICA=get_prop("replica") REGION=get_prop("region")
-:header-args:bash+: :var PG=get_prop("pg") SG=get_prop("sg")
-:header-args:bash+: :var SECRET_PASSWORD=get_prop("password") ADMIN_USER=get_prop("admin")
-:END:
-<<default header args>>
-The properties above define the default header args for all code blocks, as well as specific header args for =sql= and
-=bash= code blocks.
-
-If you do not want to use the cached Org-babel results, and actually want this document to execute =bash= and =sql= scripts
-on your behalf, you should change the default header args above from =:cache yes= to =:cache no=. Don't do this without
-reading the section [[executing code]] first, as there are some important details and warnings there.
-
 * Code                                                             :noexport:
 What follows is code that will be used throughtout the document.
 
@@ -204,10 +187,8 @@ of effort for pretty boxes, but it's worth it. Also, if you're not using a custo
 :header-args:bash+: :var SECRET_PASSWORD=get_prop("password") ADMIN_USER=get_prop("admin")
 :END:
 # The properties above define the default header args for all code blocks, as well as specific header args for sql and
-# bash code blocks.
-
-# If you do not want to use the cached Org-babel results, and actually want this document to execute bash and sql scripts
-# on your behalf, you should change the default header args above from ":cache yes" to ":cache no".
+# bash code blocks. If you do not want to use the cached Org-babel results, and actually want this document to execute
+# bash and sql scripts on your behalf, you can change the default header args above from ":cache yes" to ":cache no".
 <<main document>>
 In this document we'll use the =aws= CLI tool to create a {{{pr(dbver)}}} AWS RDS cluster that's suitable for use with
 Vitess that can be used with an unmanaged tablet for the purposes of experimenting with the =MoveTables= primitive. To that
