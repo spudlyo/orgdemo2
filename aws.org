@@ -1,0 +1,768 @@
+#+TITLE: How-to: RDS Test Cluster
+#+SUBTITLE: Create a Vitess Compatible RDS Cluster
+#+AUTHOR: Mike Hamrick
+#+EMAIL: mikeh@muppetlabs.com
+#+OPTIONS: ^:nil date:t email:t num:2 tags:nil toc:nil
+#+STARTUP: content
+#+SETUPFILE: latex.setup
+#+INCLUDE: macros.setup
+
+#+begin_export latex
+  \begin{center}
+     \includesvg[width=10cm]{logo.svg}
+  \end{center}
+  \clearpage \tableofcontents \clearpage
+#+end_export
+
+* README                                                           :noexport:
+:PROPERTIES:
+:VISIBILITY: all
+:END:
+This file is a literate Org-mode document. It is intended to be "run" by GNU Emacs 27.1 or higher. This document can
+execute =bash= and =sql= code in order to demonstrate how to create an RDS database cluster using the AWS CLI. Out of the
+box however, all exported =bash= code blocks include cached results from a previous run. This means no bash code blocks
+will be executed on your system. If Emacs ever asks you if you want to execute a =bash= or =sql= source code block, it means
+something is no longer cached and you should be very wary of saying "yes" unless you know what you're doing.
+
+This Org-mode document you're currently viewing can be seen as "source code" that produces a document that explains how
+to build an AWS MySQL RDS database test cluster. The hope is that this Org-mode source code is useful for understanding
+how to create nice-looking literate Org-mode documents. The resulting document that it produces I hope some people might
+find interesting, but ultimately it's not important for the purposes of understanding how Org-mode works.
+
+** Emacs Prerequisites
+This document has been tested on Emacs 27.1, Emacs 28.2, and Emacs 29.0.92. It may work on earlier versions of Emacs if
+you've installed Org mode version 9.3 or above. You should be able to export this document to Plain Text or PDF formats
+without installing any additional Emacs packages, it should work with Vanilla Emacs. You also don't need the GUI version
+of Emacs, it should work fine in the Terminal.
+
+** LaTeX Prerequisites
+If you want to export this document to LaTeX or PDF you'll need to install some some additional OS packages.
+
+| Software       | Ubuntu Package       |
+|----------------+----------------------|
+| TeX Live       | texlive-latex-extra  |
+| xelatex        | texlive-xetex        |
+| pdflatex       | texlive-extra-utils  |
+| latexmk        | latexmk              |
+| inkscape       | inkscape             |
+| JetBrains Mono | fonts-jetbrains-mono |
+| Inter          | fonts-inter          |
+
+If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
+Ubuntu packages to generate LaTeX PDF output.
+
+#+begin_src bash :eval ever-export :results output replace
+  sudo apt install -q2 \
+       texlive-latex-extra \
+       texlive-extra-utils \
+       texlive-xetex \
+       latexmk \
+       inkscape \
+       fonts-jetbrains-mono \
+       fonts-inter
+#+end_src
+
+** Executing the code found in this document
+<<executing code>>
+Some software is required to run this literate Org mode document. The table below shows the basics that are required for
+exporting this document to Plain Text or HTML formats. The packages and instructions below have been tested with Ubuntu
+22.04 LTS, but should work for most Debian based systems with a little modification.
+
+| Software  | Ubuntu Package   |
+|-----------+------------------|
+| AWS CLI   | awscli           |
+| MySQL CLI | mysql-client-8.0 |
+
+If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
+packages.
+
+#+begin_src bash :eval ever-export :results output replace
+  sudo apt install -q2 \
+     awscli \
+     mysql-client-8.0
+#+end_src
+
+You'll also need to configure the AWS CLI client's credentials, which is beyond the scope of this document. It's up to
+you to ensure the AWS CLI works properly before running this document.
+
+If you do want to actually execute the code in this document, you have a couple of options. You can navigate to the [[main
+document]] and manually press =C-c C-c= on each code block. This will require you to invalidate the cache first, which you
+can do by modifing the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
+precise control of when the blocks are executed, and lets you observe each result before moving to the next block.
+
+Alternately can change the default header arg from =:cache yes= to =:cache no= in the [[main document]]. Once you do this, when
+you export the document it should run all the source code blocks. Annoyingly it will prompt you for confirmation on each
+=bash= and =sql= code block. If you'd like to change this, you can hit =C-c C-c= on the block below which will cause Org-mode
+to never confirm the execution of any source block.
+
+# You know what you're doing, right? Right!?
+#+begin_src elisp :eval never-export
+(setq org-confirm-babel-evaluate nil)
+#+end_src
+
+*NOTE*: Creating RDS databases can take 5-10 minutes, and in this document we create two of them. This means Emacs can be
+spinning its wheels for ~20 minutes during the export process while it cranks through the source blocks. This is not
+asynchronous, and Emacs will appear to be locked up during this time.
+
+*WARNING*: If you've configured things properly, the code in these source blocks will actually create AWS resources for
+you that Amazon /will definitely/ charge you money for. See [[cleaning up]] for details on how to delete any resources that
+running this document will create on your behalf.
+
+* Properties as Constants                                          :noexport:
+:PROPERTIES:
+:rds:      mikeh-rds
+:replica:  mikeh-rds-replica
+:region:   us-west-2
+:pg:       mikeh-rds-gtid
+:sg:       mikeh-rds-allowlist
+:dbfamily: mysql8.0
+:dbver:    MySQL 8.0
+:dbclass:  db.t4g.micro
+:dbengine: 8.0.32
+:dbsize:   5
+:dbstore:  standard
+:bundle:   rds.pem
+:admin:    admin
+:password: xyzzyplughfoo
+:vtuser:   vitess
+:vtpass:   brainslug123
+:cacert:   https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
+:schema:   sysbench
+:END:
+The properties above define all the constants we're using throughout this document. Feel free to modify these constants
+to meet your own needs. You'll likely want to name things differently. Perhaps you'd like to use a use a different AWS
+region, or maybe a different version of MySQL. The properties above is where you can change these things.
+
+* Properties as Header Args                                        :noexport:
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:sql:   :cmdline -N 2>/dev/null :engine mysql
+:header-args:bash:  :results output
+:header-args:bash+: :var RDS=get_prop("rds") REPLICA=get_prop("replica") REGION=get_prop("region")
+:header-args:bash+: :var PG=get_prop("pg") SG=get_prop("sg")
+:header-args:bash+: :var SECRET_PASSWORD=get_prop("password") ADMIN_USER=get_prop("admin")
+:END:
+<<default header args>>
+The properties above define the default header args for all code blocks, as well as specific header args for =sql= and
+=bash= code blocks.
+
+If you do not want to use the cached Org-babel results, and actually want this document to execute =bash= and =sql= scripts
+on your behalf, you should change the default header args above from =:cache yes= to =:cache no=. Don't do this without
+reading the section [[executing code]] first, as there are some important details and warnings there.
+
+* Code                                                             :noexport:
+What follows is code that will be used throughtout the document.
+
+#+name: get_prop
+#+begin_src elisp :results value :exports none :var prop="test"
+(car (org-property-values prop))
+#+end_src
+
+#+name: strip
+#+begin_src elisp :results value raw :exports none :var line="  foo  "
+(string-trim line)
+#+end_src
+
+The following function is run when the document is loaded by Emacs. You have to OK this first. Most of what this code
+does is make it so every =#+begin_example= and =#+end_example= block is rendered in LaTeX with a box around it. It's a lot
+of effort for pretty boxes, but it's worth it. Also, if you're not using a custom Emacs theme I load the wonderful
+=leuven= theme which comes with Emacs and makes Org documents look amazing. Sorry, not sorry.
+
+#+NAME: startup
+#+begin_src emacs-lisp :eval never-export :cache no :exports none
+(require 'ox)
+
+(if (null custom-enabled-themes)
+    (load-theme 'leuven))
+
+(defun my-latex-export-example-blocks (text backend info)
+  "Export example blocks as smallbox env."
+  (when (org-export-derived-backend-p backend 'latex)
+    (with-temp-buffer
+      (insert text)
+      ;; replace verbatim env with smallbox
+      (goto-char (point-min))
+      (replace-string "\\begin{verbatim}" "\\begin{smallbox}")
+      (replace-string "\\end{verbatim}" "\\end{smallbox}")
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
+(make-local-variable 'org-export-filter-example-block-functions)
+(add-to-list 'org-export-filter-example-block-functions
+             'my-latex-export-example-blocks)
+#+end_src
+
+#+RESULTS: startup
+| my-latex-export-example-blocks |
+
+* Creating a Vitess Compatible AWS RDS Cluster
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:sql:   :cmdline -N 2>/dev/null :engine mysql
+:header-args:bash:  :results output
+:header-args:bash+: :var RDS=get_prop("rds") REPLICA=get_prop("replica") REGION=get_prop("region")
+:header-args:bash+: :var PG=get_prop("pg") SG=get_prop("sg")
+:header-args:bash+: :var SECRET_PASSWORD=get_prop("password") ADMIN_USER=get_prop("admin")
+:END:
+# The properties above define the default header args for all code blocks, as well as specific header args for sql and
+# bash code blocks.
+
+# If you do not want to use the cached Org-babel results, and actually want this document to execute bash and sql scripts
+# on your behalf, you should change the default header args above from ":cache yes" to ":cache no".
+<<main document>>
+In this document we'll use the =aws= CLI tool to create a {{{pr(dbver)}}} AWS RDS cluster that's suitable for use with
+Vitess that can be used with an unmanaged tablet for the purposes of experimenting with the =MoveTables= primitive. To that
+end, we'll be setting the =binlog_format= to =row,= as well using MySQL global transaction identifiers.
+
+** Verify AWS access
+Before you can run the AWS CLI tooling, we'll first need to ensure our credentials are all set up. You should be able to
+run the following command and have it return some information about the credentails you're using.
+
+#+caption: Verify AWS access
+#+begin_src bash
+aws sts get-caller-identity --output json
+#+end_src
+
+#+RESULTS[be93550ff2b91e40e845fb588e25f2d44d7e7353]:
+#+begin_example
+{
+    "UserId": "AIDA2QT24YOMK4UZEFQIP",
+    "Account": "722885985176",
+    "Arn": "arn:aws:iam::722885985176:user/silverback"
+}
+#+end_example
+
+** Environment variables & copy and pasting examples
+Throughout this document there will be a number of =bash= command-line examples which use environment variables in order
+to make it possible for them to be reused with minimal editing. If you'd like to try out some of these examples on your
+computer, here is a list of the environment variables you'll need to customize to suit your needs.
+
+# This bash source block is never intended to be executed manually with C-c C-c.
+# It's only here to be shown in the document, and it has no results.
+#+caption: Set shell environment variables for later use
+#+begin_src bash :eval never-export
+export RDS="<<get_prop("rds")>>" # The name of our RDS instance
+export REPLICA="<<get_prop("replica")>>" # The name of our RDS replica
+export REGION="<<get_prop("region")>>" # AWS region we're using
+export PG="<<get_prop("pg")>>" # The name of our RDS Parameter Group
+export SG="<<get_prop("sg")>>" # The name of our RDS Security Group
+#+end_src
+
+** Creating a database parameter group
+We're going to be deviating from the default GTID and =binlog_format= settings. The way you configure MySQL in RDS is by
+way of a database parameter group. Let's now create a database parameter group for our database to use.
+
+#+caption: Create initial DB parameter group
+#+begin_src bash
+aws rds create-db-parameter-group \
+    --db-parameter-group-name $PG \
+    --db-parameter-group-family <<get_prop("dbfamily")>> \
+    --description "GTID and RBR settings" \
+    --region $REGION \
+    --output json
+#+end_src
+
+#+RESULTS[d6fb4fe7ae116cd057ed0bc124c610328b1a463f]:
+#+begin_example
+{
+    "DBParameterGroup": {
+        "DBParameterGroupName": "mikeh-rds-gtid",
+        "DBParameterGroupFamily": "mysql8.0",
+        "Description": "GTID and RBR settings",
+        "DBParameterGroupArn": "arn:aws:rds:us-west-2:722885985176:pg:mikeh-rds-gtid"
+    }
+}
+#+end_example
+
+We've successfully created a database parameter group called {{{prv(pg)}}}, and when doing so we specified the database
+family {{{prv(dbfamily)}}}. This created a group with a default set of parameters suitable for {{{pr(dbver)}}}.
+
+The next step is to modify this parameter group so MySQL is configured the way we want.
+
+#+caption: Modify existing DB parameter group
+#+begin_src bash
+SQL_MODE='"NO_ZERO_IN_DATE,NO_ZERO_DATE,ONLY_FULL_GROUP_BY"'
+APPLY="pending-reboot"
+aws rds modify-db-parameter-group \
+    --db-parameter-group-name $PG \
+    --region $REGION \
+    --parameters \
+    ParameterName=read_only,ParameterValue=0,ApplyMethod=$APPLY \
+    ParameterName=binlog_format,ParameterValue=ROW,ApplyMethod=$APPLY \
+    ParameterName=enforce_gtid_consistency,ParameterValue=ON,ApplyMethod=$APPLY \
+    ParameterName=gtid-mode,ParameterValue=ON,ApplyMethod=$APPLY \
+    ParameterName=sql_mode,ParameterValue=$SQL_MODE,ApplyMethod=$APPLY \
+    --output text
+#+end_src
+
+#+RESULTS[cfd8eef8e707783fc29410d2436909d0977a36e1]:
+#+begin_example
+mikeh-rds-gtid
+#+end_example
+
+These parameters also apply to the replica database we'll be creating later in this document. The replica DB parameter
+group is inherited from the primary, which is why we've expliticly set =read-only= to 0. By default this parameter is set
+to =TrueIfReplica=, which is not what we want, because we want the flexibility of altering the table definitions on the
+replica. To double check our work we can compare the parameters in our group to that of the default group.
+
+#+caption: Diff our parameter group against the family default
+#+begin_src bash
+diff <(aws rds describe-db-parameters \
+    --db-parameter-group-name $PG \
+    --query Parameters[].[ParameterName,ParameterValue] \
+    --region $REGION \
+    --output text) \
+    <(aws rds describe-db-parameters \
+    --db-parameter-group-name default.<<get_prop("dbfamily")>> \
+    --query Parameters[].[ParameterName,ParameterValue] \
+    --region $REGION \
+    --output text) || true
+#+end_src
+
+#+RESULTS[54c52aa881352d6e2c80c42da18f64c92a2f9bc6]:
+#+begin_example
+18c18
+< binlog_format	ROW
+---
+> binlog_format	MIXED
+69c69
+< enforce_gtid_consistency	ON
+---
+> enforce_gtid_consistency	None
+87c87
+< gtid-mode	ON
+---
+> gtid-mode	OFF_PERMISSIVE
+404c404
+< read_only	0
+---
+> read_only	{TrueIfReplica}
+477c477
+< sql_mode	NO_ZERO_IN_DATE,NO_ZERO_DATE,ONLY_FULL_GROUP_BY
+---
+> sql_mode	NO_ENGINE_SUBSTITUTION
+#+end_example
+
+As you can see in the =diff= output above, we've changed the =binlog_format=, =enforce_gtid_consistency=, =gtid-mode=, and other
+parameters in our {{{prv(pg)}}} database parameter group.
+
+** Creating a security group
+In order to be able to connect to your RDS instance, it's necessary to allowlist any IP addresses that will use the
+database. We're now going to create a security group that allowlists the IP address that is generating this document. If
+you have any other IPs that will need to connect, you can add them below.
+
+The first task is to create an empty security group called {{{prv(sg)}}}.
+
+#+caption: Create an empty security group
+#+NAME: new_group
+#+begin_src bash
+aws ec2 create-security-group \
+    --group-name $SG \
+    --description "Allow host IPs to connect on tcp 3306" \
+    --region $REGION \
+    --output text
+#+end_src
+
+#+RESULTS[5b4a333b2c24241f000c5b7cf0215aa07e1dd3cc]: new_group
+#+begin_example
+sg-09ccf27f48e11cdb8
+#+end_example
+
+We'll create a new environment variable for this so we can refer to it later.
+
+# This bash source block is never intended to be executed manually with C-c C-c.
+# It's only here to be shown in the document, and it has no results.
+#+caption: Save the security group ID in an environment variable
+#+begin_src bash :eval never-export
+export SGID="<<strip(new_group)>>"
+#+end_src
+
+The command shown above created an empty security group which we'll now use to allowlist the public IPV4 addresses for
+the computer that's executing these commands.
+
+#+caption: Save the security group ID in an environment variable
+#+begin_src bash :var SGID=strip(new_group)
+aws ec2 authorize-security-group-ingress \
+    --group-id $SGID \
+    --region $REGION \
+    --output json \
+    --ip-permissions \
+    IpProtocol=tcp,FromPort=3306,ToPort=3306,IpRanges=[{CidrIp=$(curl -s ipv4.canhazip.com)/32}]
+#+end_src
+
+#+RESULTS[f44900766541e036187b995c8dbe69dcf3d59d1e]:
+#+begin_example
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-0456a2db9ac2e70d3",
+            "GroupId": "sg-09ccf27f48e11cdb8",
+            "GroupOwnerId": "722885985176",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306,
+            "CidrIpv4": "67.182.138.181/32"
+        }
+    ]
+}
+#+end_example
+
+** Creating the database
+
+Now we're ready to create the database. For examples that require a uername and password, I use the shell
+variables =$ADMIN_USER= and =$SECRET_PASSWORD= instead of a literal user and password.
+
+# This bash source block is never intended to be executed manually with C-c C-c.
+# It's only here to be shown in the document, and it has no results.
+#+caption: Select an admistrative username and password for the database
+#+begin_src bash :eval never-export
+export ADMIN_USER="admin"
+export SECRET_PASSWSORD="xyzzy" # A hollow voice says "Fool."
+#+end_src
+
+To keep things inexpensive we're going to request a {{{prv(dbclass)}}} instance, running MySQL {{{pr(dbengine)}}} with
+{{{pr(dbsize)}}} GiB of {{{prv(dbstore)}}} storage.
+
+#+caption: Create the RDS instance
+#+begin_src bash :var SGID=strip(new_group)
+aws rds create-db-instance \
+    --db-instance-identifier $RDS \
+    --allocated-storage <<get_prop("dbsize")>> \
+    --db-instance-class <<get_prop("dbclass")>> \
+    --engine mysql \
+    --master-username $ADMIN_USER \
+    --master-user-password $SECRET_PASSWORD \
+    --vpc-security-group-ids $SGID \
+    --db-parameter-group-name $PG \
+    --engine-version <<get_prop("dbengine")>> \
+    --publicly-accessible \
+    --storage-type <<get_prop("dbstore")>> \
+    --region $REGION \
+    --output json > /dev/null
+#+end_src
+
+#+RESULTS[6d0b39d078439f27e39a3ac145feba0c8867cc47]:
+
+This command will output a large JSON blob that summarizes all the options we've selected for our new database instance
+that I've omitted for brevty. It will take a few minutes for the database to be ready. The command below will loop until
+the DB is available and will output the endpoint address when finished. It can take 10 minutes or more for the database
+to be available.
+
+#+caption: Wait for the RDS instance to become available
+#+name: instance
+#+begin_src bash :var SGID=strip(new_group)
+while true; do
+  response=$(aws rds describe-db-instances \
+    --db-instance-identifier $RDS \
+    --query DBInstances[].[DBInstanceStatus] \
+    --region $REGION \
+    --output text)
+
+  if [ "$response" == "available" ]; then
+    endpoint=$(aws rds describe-db-instances \
+      --db-instance-identifier $RDS \
+      --query DBInstances[].[Endpoint.Address] \
+      --region $REGION \
+      --output text)
+    echo "$endpoint"
+    break
+  fi
+  sleep 10
+done
+#+end_src
+
+#+RESULTS[be9617c9b90aab51f07ab7ef0486e3c1c68e4ba8]: instance
+#+begin_example
+mikeh-rds.cnsfmxqilniq.us-west-2.rds.amazonaws.com
+#+end_example
+
+Again we'll want to assign this to an environment variable for later use.
+
+# This bash source block is never intended to be executed manually with C-c C-c.
+# It's only here to be shown in the document, and it has no results.
+#+caption: Store our databases DNS name into a shell variable
+#+begin_src bash :eval never-export
+export RDSHOST="<<strip(instance)>>"
+#+end_src
+
+** Download the RDS certificate bundle
+We're going to want to connect to MySQL using SSL, and we're going to want to verify all the intermediate SSL
+certificates in the certificate chain. This is what the =--ssl-mode VERIFY_IDENTITY= option does, and in order to make
+this strict SSL mode work we need to download the RDS certificate bundle.
+
+#+caption: Grab a copy of the RDS certificate bundle
+#+begin_src bash
+curl -s <<get_prop("cacert")>> > <<get_prop("bundle")>>
+#+end_src
+
+#+RESULTS[6ffee4098c4bc246b5f76d38242a713cc6fc584e]:
+
+
+That should download {{{p(bundle)}}} to the current working directory, which we'll use when we connect to MySQL.
+
+** Connecting to your database
+Now that everything is set up, we should be able to connect to our newly created MySQL instance using strict SSL
+certificate verifications. The command below connects using the MySQL CLI client and prints the MySQL version. We
+redirect =STDERR= here to =/dev/null= to suppress the warning about passing the password on the command line.
+
+#+caption: Connect to the database, output version
+#+header: :var RDSHOST=strip(instance)
+#+begin_src bash
+mysql -h $RDSHOST \
+      -u $ADMIN_USER \
+      -p$SECRET_PASSWORD \
+      --ssl-mode VERIFY_IDENTITY \
+      --ssl-ca <<get_prop("bundle")>> \
+      -e 'select version()' 2> /dev/null
+#+end_src
+
+#+RESULTS[b1c767f213449e486268c3c22fbfda830d4f5677]:
+#+begin_example
+version()
+8.0.32
+#+end_example
+
+#+RESULTS[fd628073836510d190a03493d23699dbfa9cde48]:
+
+** Configure binlog retention hours
+By default, MySQL RDS instances are configured to purge their binary logs immediately. For our purposes we're going to
+need to keep 48 hours of binary logs before purging. We can use a built in RDS stored procedure to accomplish this.
+
+#+caption: Set binlog retention to 48 hours
+#+header: :var RDSHOST=strip(instance)
+#+begin_src bash
+mysql -h $RDSHOST \
+      -u $ADMIN_USER \
+      -p$SECRET_PASSWORD \
+      --ssl-mode VERIFY_IDENTITY \
+      --ssl-ca <<get_prop("bundle")>> \
+      -e "call mysql.rds_set_configuration('binlog retention hours', 48)" 2>/dev/null
+#+end_src
+
+#+RESULTS[03d8b2961c03844282b8a8ef7345394b15d46c18]:
+
+** Create a replica
+Now that we've created our primary database instance, it's pretty easy to have AWS create us a replica. We might wish to
+demonstrate a =MoveTables= workflow that sources data from both primary and replica databases, so let's create a replica
+named {{{prv(replica)}}} now. The database replica inherits almost all of its attributes from the source database, so we
+don't need to think about security or parameter groups like we did when creating the primary. The administrative user
+and password are also both inherited.
+
+#+caption: Create the RDS read replica
+#+begin_src bash
+aws rds create-db-instance-read-replica \
+    --db-instance-identifier $REPLICA \
+    --source-db-instance-identifier $RDS \
+    --region $REGION \
+    --output json > /dev/null
+#+end_src
+
+#+RESULTS[7310c35d1d239c6e2030d4582212cc2052f3ade1]:
+
+Like creating the primary database, this command will also output a large JSON blob that summarizes all the options
+that were used when creating the replica. It will take a few minutes for the replica to become available. Just like
+the primary, you can wait for your replica to be ready with the command below.
+
+#+caption: Wait until the read replica is initialized
+#+name: replica
+#+begin_src bash
+while true; do
+  response=$(aws rds describe-db-instances \
+    --db-instance-identifier $REPLICA \
+    --query DBInstances[].[DBInstanceStatus] \
+    --region $REGION \
+    --output text)
+
+  if [ "$response" == "available" ]; then
+    endpoint=$(aws rds describe-db-instances \
+      --db-instance-identifier $REPLICA \
+      --query DBInstances[].[Endpoint.Address] \
+      --region $REGION \
+      --output text)
+    echo "$endpoint"
+    break
+  fi
+  sleep 10
+done
+#+end_src
+
+#+RESULTS[22e7061e5fe369b3d49ee579adc94728b8512638]: replica
+#+begin_example
+mikeh-rds-replica.cnsfmxqilniq.us-west-2.rds.amazonaws.com
+#+end_example
+
+** Create test tables
+Now we'll connect to our primary database, create a schema called {{{p(schema)}}}, add a couple of small test tables,
+and add a row or two. You can copy and paste this SQL into a file called =init.sql= and =source= it from the MySQL CLI
+client to reset the contents of the RDS DB in between tests. From here on out, when you see SQL examples in this
+document assume that they're in a file and being sourced by the MySQL client, or simply typed in line by line into a
+MySQL client.
+
+
+#+caption: Create a test schema and tables
+#+header: :dbhost (org-sbe instance)
+#+header: :dbuser (org-sbe get_prop (prop \"admin\"))
+#+header: :dbpassword (org-sbe get_prop (prop \"password\"))
+#+ATTR_LATEX: :options morekeywords={use,schema,if,engine,charset,truncate,database}
+#+begin_src sql :exports code :tangle init.sql
+CREATE SCHEMA IF NOT EXISTS <<get_prop("schema")>>;
+USE <<get_prop("schema")>>;
+
+CREATE TABLE IF NOT EXISTS words (
+       id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+       name char(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS counters (
+       name char(30) NOT NULL PRIMARY KEY,
+       counter int NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+TRUNCATE TABLE words;
+TRUNCATE TABLE counters;
+
+INSERT INTO words VALUES (NULL, "apple");
+INSERT INTO counters VALUES ("words", 0);
+DROP DATABASE IF EXISTS _vt;
+#+end_src
+
+#+RESULTS[8d4bb42e28715f3fe52548ff4df2523296322412]:
+|   |
+
+** Create a user for Vitess
+Finally, we'll create a user for use by the Vitess =vttablet= component to use when it attaches to our RDS instance. While
+we could simply use the administrative user for Vitess, I think it's useful to show what privileges the
+=vttablet= process needs.
+
+#+caption: Create a Vitess user
+#+header: :dbhost (org-sbe instance)
+#+header: :dbuser (org-sbe get_prop (prop \"admin\"))
+#+header: :dbpassword (org-sbe get_prop (prop \"password\"))
+#+begin_src sql :exports code
+CREATE USER IF NOT EXISTS '<<get_prop("vtuser")>>'@'%' IDENTIFIED BY '<<get_prop("vtpass")>>';
+GRANT PROCESS, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '<<get_prop("vtuser")>>'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE, SHOW VIEW, LOCK TABLES ON <<get_prop("schema")>>.* TO '<<get_prop("vtuser")>>'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER on _vt.* TO '<<get_prop("vtuser")>>'@'%';
+#+end_src
+
+#+RESULTS[a22b8510e3e99b60fd80ecdfbe29ae58d5c2dccb]:
+|   |
+
+This creates the {{{prv(vtuser)}}} user (with a terrible password) and allows it access to the MySQL replication system,
+gives it the ability to manipulate data on the {{{prv(schema)}}} schema, and allows it to do whatever it likes on the
+special "_vt" schema where it does some record keeping.
+
+For our purposes we're going to need to enable =log_bin= on our replica by setting a non-zero backup retention
+period. This seems to be the only way to do it sadly.
+
+#+caption: Enable binary logging on the replica
+#+begin_src bash :exports code
+aws rds modify-db-instance \
+    --db-instance-identifier $REPLICA \
+    --backup-retention-period 1 \
+    --region $REGION \
+    --apply-immediately \
+    --output json > /dev/null
+#+end_src
+
+#+RESULTS[33fdaf8e6363682f7ef00de12662ef1b2aa06064]:
+
+That's it, pat yourself on the back, you're done! We now have an RDS database cluster that we can use when testing
+various Vitess =MoveTables= operations.
+
+* Cleaning up
+<<cleaning up>>
+We've seen how the =aws= CLI can be used to create some RDS instances suitable for use with Vitess' =MoveTables=
+workflow. After you've completed your tests with these resources, we should clean up after ourselves. This section
+describes how to free up all the resources we've allocated.
+
+** Delete the DB instances
+The first thing we want to do is destroy the RDS database instances we've created. First delete the replica, and then
+follow it up with the primary.
+
+# All the source blocks below may be executed with C-c C-c if you wish to manually clean up after yourself. They are
+# marked with ":eval never-export" because we don't want the exporter to execute the blocks.
+#+begin_src bash :eval never-export :exports code
+aws rds delete-db-instance \
+    --db-instance-identifier $REPLICA \
+    --skip-final-snapshot \
+    --region $REGION \
+    --output json
+#+end_src
+
+#+begin_src bash :eval never-export :exports code
+aws rds delete-db-instance \
+    --db-instance-identifier $RDS \
+    --skip-final-snapshot \
+    --region $REGION \
+    --output json
+#+end_src
+
+** Delete the Security Group
+We'll want to clean up the security group as well, it wouldn't do to litter our AWS account with these.
+
+#+begin_src bash :eval never-export :exports code
+aws ec2 delete-security-group \
+     --group-id $SGID \
+     --region $REGION
+#+end_src
+
+** Delete the DB Parameter Group
+Same goes for the DB parameter group.
+
+#+begin_src bash :eval never-export :exports code
+aws rds delete-db-parameter-group \
+    --db-parameter-group-name $PG \
+    --region $REGION
+#+end_src
+
+* Set some Emacs Variables and Run some Elisp Code                 :noexport:
+<<emacs variables>>
+In this section we're going to set up some buffer local variables and run some code. This will allow this literate
+document to run code on your system. Most of these changes are in service to generating a nice PDF file using LaTeX.
+
+In summary:
+
+- Text should wrap at 120 columns
+- We should be able to run shell, emacs-lisp, and sql code blocks
+- Elisp code blocks should be evaluated without confirmation
+- Properties defined in one heading should be inherited by all other headings
+- Executing a source block should always produce a =begin_example= block
+- We should use "xelatex" as the latex compiler
+- We should run the latex to pdf process using 'latexmk' with some specific arguments
+- Hyperlinks should not have janky red boxes around them (colorlinks=true)
+- We need to add the "titletoc" package to the default latex packages list, but before hyperref
+- Source code blocks should be formatted in LaTeX using the "listings" package
+- All source code blocks should have a simple box framing them
+- Execute a elisp source block called "startup", the code heading should remain folded
+
+# Local Variables:
+# fill-column: 120
+# eval: (org-babel-do-load-languages 'org-babel-load-languages '((shell . t) (emacs-lisp . t) (sql . t)))
+# org-confirm-babel-evaluate: (lambda (lang body) (not (or (string= lang "elisp") (string= lang "emacs-lisp"))))
+# org-use-property-inheritance: t
+# org-babel-min-lines-for-block-output: 0
+# org-latex-compiler: "xelatex"
+# org-latex-pdf-process: ("latexmk -f -pdf -%latex -8bit -shell-escape -interaction=nonstopmode -output-directory=%o %f")
+# org-latex-hyperref-template: "\\hypersetup{\n pdfauthor={%a},\n pdftitle={%t},\n colorlinks=true}\n")
+# org-latex-default-packages-alist: (("AUTO" "inputenc" t ("pdflatex"))
+#                                    ("T1" "fontenc" t ("pdflatex"))
+#                                    ("" "graphicx" t)
+#                                    ("" "longtable" nil)
+#                                    ("" "wrapfig" nil)
+#                                    ("" "rotating" nil)
+#                                    ("normalem" "ulem" t)
+#                                    ("" "amsmath" t)
+#                                    ("" "amssymb" t)
+#                                    ("" "capt-of" nil)
+#                                    ("" "titletoc" nil)
+#                                    ("" "hyperref" nil))
+# org-latex-listings: t
+# org-latex-listings-options: (("frame" "single"))
+# eval: (progn
+#         (org-babel-goto-named-src-block "startup")
+#         (org-babel-execute-src-block)
+#         (set-buffer-modified-p nil)
+#         (outline-hide-subtree))
+# End:
