@@ -51,8 +51,11 @@ If you want to export this document to LaTeX or PDF you'll need to install some 
 If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
 Ubuntu packages to generate LaTeX PDF output.
 
+*NOTE:* This can take several minutes to run, during which time Emacs may appear to be locked up as this work is /not/ done
+asynchronously.
+
 #+begin_src bash :eval ever-export :results output replace
-  sudo apt install -q2 \
+  sudo apt-get install -qq \
        texlive-latex-extra \
        texlive-extra-utils \
        texlive-xetex \
@@ -77,7 +80,7 @@ If you can run 'sudo' without needing a password you can hit =C-c C-c= on the bl
 packages.
 
 #+begin_src bash :eval ever-export :results output replace
-  sudo apt install -q2 \
+  sudo apt-get install -qq \
      awscli \
      mysql-client-8.0
 #+end_src
