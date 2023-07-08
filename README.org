@@ -1,4 +1,4 @@
-* Literate Documenation with Emacs and Org Mode
+* Literate Documentation with Emacs and Org Mode
 
 In this repository you'll find the source material for a [[https://osem.seagl.org/conferences/seagl2023/program/proposals/952][talk]] I hope to give at SeaGL 2023. This talk will be in
 much in the same sprit as a [[https://osem.seagl.org/conferences/seagl2019/program/proposals/664][talk]] I gave in 2019, but will be updated to include some new tips and techniques that I've
