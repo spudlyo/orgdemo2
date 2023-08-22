@@ -54,7 +54,7 @@ Ubuntu packages to generate LaTeX PDF output.
 *NOTE:* This can take several minutes to run, during which time Emacs may appear to be locked up as this work is /not/ done
 asynchronously.
 
-#+begin_src bash :eval ever-export :results output replace
+#+begin_src bash :eval never-export :results output replace
   sudo apt-get install -qq \
        texlive-latex-extra \
        texlive-extra-utils \
@@ -79,7 +79,7 @@ exporting this document to Plain Text or HTML formats. The packages and instruct
 If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
 packages.
 
-#+begin_src bash :eval ever-export :results output replace
+#+begin_src bash :eval never-export :results output replace
   sudo apt-get install -qq \
      awscli \
      mysql-client-8.0
