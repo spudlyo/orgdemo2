@@ -28,11 +28,42 @@ to build Emacs from scratch. The hope is that this Org-mode source code is usefu
 nice-looking literate Org-mode documents. The resulting document that it produces I hope some people might find
 interesting, but ultimately it's not important for the purposes of understanding how Org-mode works.
 
+** Operating System Prerequisities
+This document is intended to be "run" on a GNU/Linux system. It has been tested on both RedHat based systems (Fedora
+release 38 server edition) and Debian based systems (Ubuntu Server 22.04).
+
+*** Using the 'sudo' command
+Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a privileged
+user. By default, =sudo= will prompt you for a password, which will cause issues when running the commands in this
+document, since we're not running in an interactive mode. In order for your local user to run privileged commands
+/without/ a password, you'll need to make a change to the =/etc/sudoers= file using the =sudo visudo= command, which will fire
+up =$EDITOR= for you to edit =/etc/sudoers=.
+
+You should see a section in the file that allows users of a specific group (in this case the =sudo= group) to execute any
+command. On RedHat based GNU/Linux systems the group is called =wheel= rather than =sudo=.
+
+#+CAPTION: Relevant section from /etc/sudoers on Ubuntu
+#+begin_example
+# Allow members of group sudo to execute any command
+%sudo   ALL=(ALL:ALL) ALL
+#+end_example
+
+When you edit it, you'll want to change it to look like this:
+
+#+CAPTION: Updated section from /etc/sudoers on Ubuntu
+#+begin_example
+# Allow members of group sudo to execute any command
+%sudo   ALL=(ALL) NOPASSWD: ALL
+#+end_example
+
 ** Emacs Prerequisites
-This document has been tested on Emacs 27.1, Emacs 28.2, and Emacs 29.1. It may work on earlier versions of Emacs if
+This document has been tested on Emacs 27.1, Emacs 28.3, and Emacs 29.1. It may work on earlier versions of Emacs if
 you've installed Org mode version 9.3 or above. You should be able to export this document to Plain Text or PDF formats
 without installing any additional Emacs packages, it should work with Vanilla Emacs. You also don't need the GUI version
 of Emacs, it should work fine in the Terminal.
+
+On Ubuntu 22.04 you can install Emacs 29.1 by running: =sudo snap install emacs --classic=, on Fedora 38 you can install
+Emacs using =sudo dnf install emacs-nox=. Ideally you should be viewing this document inside GNU Emacs.
 
 ** LaTeX Prerequisites
 If you want to export this document to LaTeX or PDF you'll need to install some some additional OS packages.
@@ -51,7 +82,7 @@ If you can run 'sudo' without needing a password you can hit =C-c C-c= on the bl
 Debian packages to generate LaTeX PDF output. The block below that is for RedHat based systems.
 
 *NOTE:* This can take several minutes to run, during which time Emacs may appear to be locked up as this work is /not/ done
-asynchronously.
+asynchronously. This is around 1.5GB of packages, so make sure you have the space available.
 
 #+CAPTION: Install LaTeX Prerequisites on Debian based systems
 #+begin_src bash :eval never-export :results output replace
@@ -78,28 +109,6 @@ asynchronously.
 
 ** Executing the code found in this document
 <<executing code>>
-Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a privileged
-user. By default, =sudo= will prompt you for a password, which will cause issues when running the commands in this
-document, since we're not running in an interactive mode. In order for your local user to run privileged commands
-/without/ a password, you'll need to make a change to the =/etc/sudoers= file with the =sudo visudo= command.
-
-You should see a section in the file that allows users of a specific group (in this case the =sudo= group) to execute any
-command. On RedHat based GNU/Linux systems the group is called =wheel= rather than =sudo=.
-
-#+CAPTION: Relevant section from /etc/sudoers on Ubuntu
-#+begin_example
-# Allow members of group sudo to execute any command
-%sudo   ALL=(ALL:ALL) ALL
-#+end_example
-
-When you edit it, you'll want to change it to look like this:
-
-#+CAPTION: Updated section from /etc/sudoers on Ubuntu
-#+begin_example
-# Allow members of group sudo to execute any command
-%sudo   ALL=(ALL) NOPASSWD: ALL
-#+end_example
-
 If you do want to actually execute the code in this document, you have a couple of options. You can navigate to the [[main
 document]] and manually press =C-c C-c= on each code block. This will require you to invalidate the cache first, which you
 can do by modifing the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
@@ -121,7 +130,9 @@ appear to be locked up during this time.
 
 * Properties as Constants                                          :noexport:
 :PROPERTIES:
-
+:prefix: rh_
+:rh_user: a Fedora 38 user
+:deb_user: an Ubuntu 22.04 user
 :END:
 The properties above define all the constants we're using throughout this document. Feel free to modify these constants
 to meet your own needs.
@@ -131,7 +142,12 @@ What follows is code that will be used throughtout the document.
 
 #+name: get_prop
 #+begin_src elisp :results value :exports none :var prop="test"
-(car (org-property-values prop))
+(let ((ret (org-property-values prop))
+      (prefix (org-property-values "prefix")))
+  (if ret
+      (car ret)
+    (when prefix
+      (car (org-property-values (concat (car prefix) prop))))))
 #+end_src
 
 #+name: strip
@@ -171,7 +187,15 @@ of effort for pretty boxes, but it's worth it. Also, if you're not using a custo
 | my-latex-export-example-blocks |
 
 * Building Emacs from Source
-** Procuring the Code
+** Introduction
+In this document we're going to demonstrate how you, {{{pr(user)}}} user, can download and build the source code for GNU
+Emacs. The goal is to walk through each step of the process, and explain things as we go. By default, most systems do
+not have the necessary software components installed that are required to build GNU Emacs from source, so we'll also be
+installing a lot of software on your computer. You'll need =sudo= access for this, and this document assumes that your
+local user can run =sudo= without a password.
+
+** Procuring the Source Code
+Now we just got to procure some source code.
 
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
