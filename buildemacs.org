@@ -37,22 +37,23 @@ of Emacs, it should work fine in the Terminal.
 ** LaTeX Prerequisites
 If you want to export this document to LaTeX or PDF you'll need to install some some additional OS packages.
 
-| Software       | Ubuntu Package       |
-|----------------+----------------------|
-| TeX Live       | texlive-latex-extra  |
-| xelatex        | texlive-xetex        |
-| pdflatex       | texlive-extra-utils  |
-| latexmk        | latexmk              |
-| inkscape       | inkscape             |
-| JetBrains Mono | fonts-jetbrains-mono |
-| Inter          | fonts-inter          |
+| Software       | Debian Package       | RedHat Package       |
+|----------------+----------------------+----------------------|
+| TeX Live       | texlive-latex-extra  | texlive-latex        |
+| xelatex        | texlive-xetex        | texlive-xetex        |
+| pdflatex       | texlive-extra-utils  | texlive-latex        |
+| latexmk        | latexmk              | latexmk              |
+| inkscape       | inkscape             | inkscape             |
+| JetBrains Mono | fonts-jetbrains-mono | jetbrains-mono-fonts |
+| Inter          | fonts-inter          | texlive-inter        |
 
 If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
-Ubuntu packages to generate LaTeX PDF output.
+Debian packages to generate LaTeX PDF output. The block below that is for RedHat based systems.
 
 *NOTE:* This can take several minutes to run, during which time Emacs may appear to be locked up as this work is /not/ done
 asynchronously.
 
+#+CAPTION: Install LaTeX Prerequisites on Debian based systems
 #+begin_src bash :eval never-export :results output replace
   sudo apt-get install -qq \
        texlive-latex-extra \
@@ -64,6 +65,17 @@ asynchronously.
        fonts-inter
 #+end_src
 
+#+CAPTION: Install LaTeX Prerequisites on RedHat based systems
+#+begin_src bash :eval never-export :results output replace
+  sudo dnf install -y \
+       texlive-latex \
+       texlive-xetex \
+       latexmk \
+       inkscape \
+       jetbrains-mono-fonts \
+       texlive-inter
+#+end_src
+
 ** Executing the code found in this document
 <<executing code>>
 Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a privileged
@@ -72,9 +84,9 @@ document, since we're not running in an interactive mode. In order for your loca
 /without/ a password, you'll need to make a change to the =/etc/sudoers= file with the =sudo visudo= command.
 
 You should see a section in the file that allows users of a specific group (in this case the =sudo= group) to execute any
-command.
+command. On RedHat based GNU/Linux systems the group is called =wheel= rather than =sudo=.
 
-#+CAPTION: Relevant section from /etc/sudoers
+#+CAPTION: Relevant section from /etc/sudoers on Ubuntu
 #+begin_example
 # Allow members of group sudo to execute any command
 %sudo   ALL=(ALL:ALL) ALL
@@ -82,7 +94,7 @@ command.
 
 When you edit it, you'll want to change it to look like this:
 
-#+CAPTION: Updated section from /etc/sudoers
+#+CAPTION: Updated section from /etc/sudoers on Ubuntu
 #+begin_example
 # Allow members of group sudo to execute any command
 %sudo   ALL=(ALL) NOPASSWD: ALL
