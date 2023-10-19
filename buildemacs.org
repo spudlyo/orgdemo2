@@ -1,0 +1,213 @@
+#+TITLE: Building Emacs from Source
+#+AUTHOR: Mike Hamrick
+#+EMAIL: mikeh@muppetlabs.com
+#+OPTIONS: ^:nil date:t email:t num:2 tags:nil toc:nil
+#+STARTUP: content
+#+SETUPFILE: latex.setup
+#+INCLUDE: macros.setup
+
+#+begin_export latex
+  \begin{center}
+     \includesvg[width=10cm]{logo.svg}
+  \end{center}
+  \clearpage \tableofcontents \clearpage
+#+end_export
+
+* README                                                           :noexport:
+:PROPERTIES:
+:VISIBILITY: all
+:END:
+This file is a literate Org-mode document. It is intended to be "run" by GNU Emacs 27.1 or higher. This document can
+execute =bash= shell code in order to demonstrate how to create install packages and build Emacs. Out of the
+box however, all exported =bash= code blocks include cached results from a previous run. This means no bash code blocks
+will be executed on your system. If Emacs ever asks you if you want to execute a =bash= source code block, it means
+something is no longer cached and you should be very wary of saying "yes" unless you know what you're doing.
+
+This Org-mode document you're currently viewing can be seen as "source code" that produces a document that explains how
+to build Emacs from scratch. The hope is that this Org-mode source code is useful for understanding how to create
+nice-looking literate Org-mode documents. The resulting document that it produces I hope some people might find
+interesting, but ultimately it's not important for the purposes of understanding how Org-mode works.
+
+** Emacs Prerequisites
+This document has been tested on Emacs 27.1, Emacs 28.2, and Emacs 29.1. It may work on earlier versions of Emacs if
+you've installed Org mode version 9.3 or above. You should be able to export this document to Plain Text or PDF formats
+without installing any additional Emacs packages, it should work with Vanilla Emacs. You also don't need the GUI version
+of Emacs, it should work fine in the Terminal.
+
+** LaTeX Prerequisites
+If you want to export this document to LaTeX or PDF you'll need to install some some additional OS packages.
+
+| Software       | Ubuntu Package       |
+|----------------+----------------------|
+| TeX Live       | texlive-latex-extra  |
+| xelatex        | texlive-xetex        |
+| pdflatex       | texlive-extra-utils  |
+| latexmk        | latexmk              |
+| inkscape       | inkscape             |
+| JetBrains Mono | fonts-jetbrains-mono |
+| Inter          | fonts-inter          |
+
+If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
+Ubuntu packages to generate LaTeX PDF output.
+
+*NOTE:* This can take several minutes to run, during which time Emacs may appear to be locked up as this work is /not/ done
+asynchronously.
+
+#+begin_src bash :eval never-export :results output replace
+  sudo apt-get install -qq \
+       texlive-latex-extra \
+       texlive-extra-utils \
+       texlive-xetex \
+       latexmk \
+       inkscape \
+       fonts-jetbrains-mono \
+       fonts-inter
+#+end_src
+
+** Executing the code found in this document
+<<executing code>>
+Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a privileged
+user. By default, =sudo= will prompt you for a password, which will cause issues when running the commands in this
+document, since we're not running in an interactive mode. In order for your local user to run privileged commands
+/without/ a password, you'll need to make a change to the =/etc/sudoers= file with the =sudo visudo= command.
+
+You should see a section in the file that allows users of a specific group (in this case the =sudo= group) to execute any
+command.
+
+#+CAPTION: Relevant section from /etc/sudoers
+#+begin_example
+# Allow members of group sudo to execute any command
+%sudo   ALL=(ALL:ALL) ALL
+#+end_example
+
+When you edit it, you'll want to change it to look like this:
+
+#+CAPTION: Updated section from /etc/sudoers
+#+begin_example
+# Allow members of group sudo to execute any command
+%sudo   ALL=(ALL) NOPASSWD: ALL
+#+end_example
+
+If you do want to actually execute the code in this document, you have a couple of options. You can navigate to the [[main
+document]] and manually press =C-c C-c= on each code block. This will require you to invalidate the cache first, which you
+can do by modifing the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
+precise control of when the blocks are executed, and lets you observe each result before moving to the next block.
+
+Alternately can change the default header arg from =:cache yes= to =:cache no= in the [[main document]]. Once you do this, when
+you export the document it should run all the source code blocks. Annoyingly it will prompt you for confirmation on each
+=bash= and =sql= code block. If you'd like to change this, you can hit =C-c C-c= on the block below which will cause Org-mode
+to never confirm the execution of any source block.
+
+# You know what you're doing, right? Right!?
+#+begin_src elisp :eval never-export
+(setq org-confirm-babel-evaluate nil)
+#+end_src
+
+*NOTE*: Building Emacs can take 5-10 minutes or longer on a  slow machine. This means Emacs can be spinning its wheels for
+a while during the  export process while it cranks through  the source blocks. This is not  asynchronous, and Emacs will
+appear to be locked up during this time.
+
+* Properties as Constants                                          :noexport:
+:PROPERTIES:
+
+:END:
+The properties above define all the constants we're using throughout this document. Feel free to modify these constants
+to meet your own needs.
+
+* Code                                                             :noexport:
+What follows is code that will be used throughtout the document.
+
+#+name: get_prop
+#+begin_src elisp :results value :exports none :var prop="test"
+(car (org-property-values prop))
+#+end_src
+
+#+name: strip
+#+begin_src elisp :results value raw :exports none :var line="  foo  "
+(string-trim line)
+#+end_src
+
+The following function is run when the document is loaded by Emacs. You have to OK this first. Most of what this code
+does is make it so every =#+begin_example= and =#+end_example= block is rendered in LaTeX with a box around it. It's a lot
+of effort for pretty boxes, but it's worth it. Also, if you're not using a custom Emacs theme I load the wonderful
+=leuven= theme which comes with Emacs and makes Org documents look amazing. Sorry, not sorry.
+
+#+NAME: startup
+#+begin_src emacs-lisp :eval never-export :cache no :exports none
+(require 'ox)
+
+(if (null custom-enabled-themes)
+    (load-theme 'leuven))
+
+(defun my-latex-export-example-blocks (text backend info)
+  "Export example blocks as smallbox env."
+  (when (org-export-derived-backend-p backend 'latex)
+    (with-temp-buffer
+      (insert text)
+      ;; replace verbatim env with smallbox
+      (goto-char (point-min))
+      (replace-string "\\begin{verbatim}" "\\begin{smallbox}")
+      (replace-string "\\end{verbatim}" "\\end{smallbox}")
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
+(make-local-variable 'org-export-filter-example-block-functions)
+(add-to-list 'org-export-filter-example-block-functions
+             'my-latex-export-example-blocks)
+#+end_src
+
+#+RESULTS: startup
+| my-latex-export-example-blocks |
+
+* Building Emacs from Source
+** Procuring the Code
+
+
+* Set some Emacs Variables and Run some Elisp Code                 :noexport:
+<<emacs variables>>
+In this section we're going to set up some buffer local variables and run some code. This will allow this literate
+document to run code on your system. Most of these changes are in service to generating a nice PDF file using LaTeX.
+
+In summary:
+
+- Text should wrap at 120 columns
+- We should be able to run shell and emacs-lisp code blocks
+- Elisp code blocks should be evaluated without confirmation
+- Properties defined in one heading should be inherited by all other headings
+- Executing a source block should always produce a =begin_example= block
+- We should use "xelatex" as the latex compiler
+- We should run the latex to pdf process using 'latexmk' with some specific arguments
+- Hyperlinks should not have janky red boxes around them (colorlinks=true)
+- We need to add the "titletoc" package to the default latex packages list, but before hyperref
+- Source code blocks should be formatted in LaTeX using the "listings" package
+- All source code blocks should have a simple box framing them
+- Execute a elisp source block called "startup", the code heading should remain folded
+
+# Local Variables:
+# fill-column: 120
+# eval: (org-babel-do-load-languages 'org-babel-load-languages '((shell . t) (emacs-lisp . t)))
+# org-confirm-babel-evaluate: (lambda (lang body) (not (or (string= lang "elisp") (string= lang "emacs-lisp"))))
+# org-use-property-inheritance: t
+# org-babel-min-lines-for-block-output: 0
+# org-latex-compiler: "xelatex"
+# org-latex-pdf-process: ("latexmk -f -pdf -%latex -8bit -shell-escape -interaction=nonstopmode -output-directory=%o %f")
+# org-latex-hyperref-template: "\\hypersetup{\n pdfauthor={%a},\n pdftitle={%t},\n colorlinks=true}\n")
+# org-latex-default-packages-alist: (("AUTO" "inputenc" t ("pdflatex"))
+#                                    ("T1" "fontenc" t ("pdflatex"))
+#                                    ("" "graphicx" t)
+#                                    ("" "longtable" nil)
+#                                    ("" "wrapfig" nil)
+#                                    ("" "rotating" nil)
+#                                    ("normalem" "ulem" t)
+#                                    ("" "amsmath" t)
+#                                    ("" "amssymb" t)
+#                                    ("" "capt-of" nil)
+#                                    ("" "titletoc" nil)
+#                                    ("" "hyperref" nil))
+# org-latex-listings: t
+# org-latex-listings-options: (("frame" "single"))
+# eval: (progn
+#         (org-babel-goto-named-src-block "startup")
+#         (org-babel-execute-src-block)
+#         (set-buffer-modified-p nil)
+#         (outline-hide-subtree))
+# End:
