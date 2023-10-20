@@ -193,24 +193,80 @@ of effort for pretty boxes, but it's worth it. Also, if you're not using a custo
 #+RESULTS: startup
 | my-latex-export-example-blocks |
 
-* Building Emacs from Source
-** Introduction
+* Introduction
 In this document we're going to demonstrate how you, {{{pr(user)}}}, can download and build the source code for GNU
 Emacs. The goal is to walk through each step of the process, and explain things as we go. By default, most systems do
 not have the necessary software components installed that are required to build GNU Emacs from source, so we'll also be
 installing a lot of software on your computer. You'll need =sudo= access for this, and this document assumes that your
 local user can run =sudo= without a password.
 
-** Installing git :redhat:
-By default, on the Fedora systems I tested on, the =git= tool is not installed, so the first thing we'll do is install it
-using the =dnf= package management tool. Here we provide the =-y= option so =dnf= doesn't ask us any questions.
+* Obtaining the Source Code
+In this section I'll demonstrate how you ca
 
+** Installing git :redhat:
+By default, on the Fedora systems I tested on, the =git= tool is not installed, so the first thing we'll do is install
+it using the =dnf= package management tool. Here we provide the =-y= option so =dnf= doesn't ask us any questions, and
+we'll use the =--quiet= argument to suppress the copious amount of output that =dnf= normally spits out.
+
+#+caption: Install the git package
 #+begin_src bash
-sudo dnf install -y git
+  sudo dnf install -y --quiet git
 #+end_src
 
-** Procuring the Source Code
-Now we just got to procure some source code. We'll do this using =git=
+#+RESULTS[7c445774d435e806d5bafc4f9fd379665d112bcb]:
+#+begin_example
+
+Installed:
+  git-2.41.0-1.fc38.aarch64            git-core-2.41.0-1.fc38.aarch64          
+  git-core-doc-2.41.0-1.fc38.noarch    perl-Error-1:0.17029-11.fc38.noarch     
+  perl-Git-2.41.0-1.fc38.noarch        perl-TermReadKey-2.38-16.fc38.aarch64   
+  perl-lib-0.65-497.fc38.aarch64      
+
+#+end_example
+
+** Creating a source directory
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output
+:END:
+The first thing we're going to want to do is to create a =~/src= directory beneath our home directory where all our
+source code is going to live. We'll also change our current working directory to this directory. This helps keep things
+tidy.
+
+#+caption: Create and cd to our source directory
+#+begin_src bash
+  mkdir -p ~/src; cd ~/src
+#+end_src
+
+** Cloning the Repo
+The next thing we'll want to do is clone the Emacs repository from /Savannah/, the software forge hosted by the Free
+Software Foundation. This will be a full clone, complete with history, branches, and tags. It can take a few minutes to
+complete. We'll provide the =--quiet= to =git= here to tell it not to report its progress to the screen.
+
+#+caption: Clone the Emacs git repository from Savannah
+#+begin_src bash :dir ~/src
+  git clone --quiet https://git.savannah.gnu.org/git/emacs.git
+  #+end_src
+
+** Checking out the tags
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output
+:header-args:bash+:  :dir ~/src/emacs
+:END:
+
+Now that we've cloned the repository, let's =cd= into the directory and take a look at some tags. Emacs uses =git= tags
+to capture a point in the commit history that marks the release of a specific version. 
+
+#+caption: Clone the Emacs git repository from Savannah
+#+begin_src bash
+  git tag | wc -l
+  #+end_src
+
+  #+RESULTS[bff0bbcb583233629cc6dabd0d6296379d4f1cc8]:
+  #+begin_example
+  183
+  #+end_example
 
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
