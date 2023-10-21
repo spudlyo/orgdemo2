@@ -201,7 +201,12 @@ installing a lot of software on your computer. You'll need =sudo= access for thi
 local user can run =sudo= without a password.
 
 * Obtaining the Source Code
-In this section I'll demonstrate how you ca
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output
+:END:
+In this chapter I'll demonstrate how to download the Emacs source code using =git= and how to set your view of the code to
+a specific tagged release of GNU Emacs.
 
 ** Installing git :redhat:
 By default, on the Fedora systems I tested on, the =git= tool is not installed, so the first thing we'll do is install
@@ -217,18 +222,15 @@ we'll use the =--quiet= argument to suppress the copious amount of output that =
 #+begin_example
 
 Installed:
-  git-2.41.0-1.fc38.aarch64            git-core-2.41.0-1.fc38.aarch64          
-  git-core-doc-2.41.0-1.fc38.noarch    perl-Error-1:0.17029-11.fc38.noarch     
-  perl-Git-2.41.0-1.fc38.noarch        perl-TermReadKey-2.38-16.fc38.aarch64   
-  perl-lib-0.65-497.fc38.aarch64      
+  git-2.41.0-1.fc38.aarch64            git-core-2.41.0-1.fc38.aarch64
+  git-core-doc-2.41.0-1.fc38.noarch    perl-Error-1:0.17029-11.fc38.noarch
+  perl-Git-2.41.0-1.fc38.noarch        perl-TermReadKey-2.38-16.fc38.aarch64
+  perl-lib-0.65-497.fc38.aarch64
 
 #+end_example
 
 ** Creating a source directory
-:PROPERTIES:
-:header-args:       :noweb yes :exports both :cache yes
-:header-args:bash:  :results output
-:END:
+
 The first thing we're going to want to do is to create a =~/src= directory beneath our home directory where all our
 source code is going to live. We'll also change our current working directory to this directory. This helps keep things
 tidy.
@@ -238,6 +240,8 @@ tidy.
   mkdir -p ~/src; cd ~/src
 #+end_src
 
+#+RESULTS[9ad8416d923624d8c4e12a96d06af904c4b71b6d]:
+
 ** Cloning the Repo
 The next thing we'll want to do is clone the Emacs repository from /Savannah/, the software forge hosted by the Free
 Software Foundation. This will be a full clone, complete with history, branches, and tags. It can take a few minutes to
@@ -246,28 +250,49 @@ complete. We'll provide the =--quiet= to =git= here to tell it not to report its
 #+caption: Clone the Emacs git repository from Savannah
 #+begin_src bash :dir ~/src
   git clone --quiet https://git.savannah.gnu.org/git/emacs.git
+  cd emacs
   #+end_src
+
+#+RESULTS[9cee994c337fcfab0672e687b456621eefdfaffc]:
 
 ** Checking out the tags
 :PROPERTIES:
-:header-args:       :noweb yes :exports both :cache yes
-:header-args:bash:  :results output
 :header-args:bash+:  :dir ~/src/emacs
 :END:
+Now that we've cloned the repository and set our current working directory to =~/src/emacs= let's take a look at some
+tags. Emacs uses =git= tags to capture a point in the commit history that marks the release of a specific version. We can
+run =git tag= to list all the available tags.
 
-Now that we've cloned the repository, let's =cd= into the directory and take a look at some tags. Emacs uses =git= tags
-to capture a point in the commit history that marks the release of a specific version. 
-
-#+caption: Clone the Emacs git repository from Savannah
+#+caption: How many tags are there?
+#+name: num_tags
 #+begin_src bash
   git tag | wc -l
   #+end_src
 
-  #+RESULTS[bff0bbcb583233629cc6dabd0d6296379d4f1cc8]:
-  #+begin_example
-  183
-  #+end_example
+#+RESULTS[c2efae208543a8f8e8644df957aa5644f30946ee]: num_tags
+#+begin_example
+     184
+#+end_example
 
+Wow {{{r(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29.
+
+#+begin_src bash
+git tag --list 'emacs-29*'
+#+end_src
+
+#+RESULTS[e5b10d46029cda3035fa5bab7099bb6a3bd87420]:
+#+begin_example
+emacs-29
+emacs-29.0.90
+emacs-29.0.91
+emacs-29.0.92
+emacs-29.1
+emacs-29.1-rc1
+emacs-29.1.90
+#+end_example
+
+You might get a slightly different list when you run the command, but as of this writing, those are all the tagged
+releases of Emacs 29.
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
