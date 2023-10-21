@@ -5,6 +5,7 @@
 #+STARTUP: content
 #+SETUPFILE: latex.setup
 #+INCLUDE: macros.setup
+#+EXCLUDE_TAGS: noexport redhat
 
 #+begin_export latex
   \begin{center}
@@ -76,7 +77,7 @@ If you want to export this document to LaTeX or PDF you'll need to install some 
 | latexmk        | latexmk              | latexmk              |
 | inkscape       | inkscape             | inkscape             |
 | JetBrains Mono | fonts-jetbrains-mono | jetbrains-mono-fonts |
-| Inter          | fonts-inter          | texlive-inter        |
+| Inter          | fonts-inter          | rsms-inter-fonts     |
 
 If you can run 'sudo' without needing a password you can hit =C-c C-c= on the block below to install the necessary
 Debian packages to generate LaTeX PDF output. The block below that is for RedHat based systems.
@@ -101,6 +102,12 @@ asynchronously. This is around 1.5GB of packages, so make sure you have the spac
   sudo dnf install -y \
        texlive-latex \
        texlive-xetex \
+       texlive-wrapfig \
+       texlive-ulem \
+       texlive-capt-of \
+       texlive-svg \
+       texlive-trimspaces \
+       texlive-parskip \
        latexmk \
        inkscape \
        jetbrains-mono-fonts \
@@ -124,9 +131,9 @@ to never confirm the execution of any source block.
 (setq org-confirm-babel-evaluate nil)
 #+end_src
 
-*NOTE*: Building Emacs can take 5-10 minutes or longer on a  slow machine. This means Emacs can be spinning its wheels for
-a while during the  export process while it cranks through  the source blocks. This is not  asynchronous, and Emacs will
-appear to be locked up during this time.
+*NOTE*: Building Emacs can take 10-15 minutes or more on a slow machine. This means Emacs can be spinning its wheels for a
+while during the export process while it cranks through the source blocks in the document. This is not asynchronous, and
+Emacs will appear to be locked up during this time.
 
 * Properties as Constants                                          :noexport:
 :PROPERTIES:
@@ -188,14 +195,22 @@ of effort for pretty boxes, but it's worth it. Also, if you're not using a custo
 
 * Building Emacs from Source
 ** Introduction
-In this document we're going to demonstrate how you, {{{pr(user)}}} user, can download and build the source code for GNU
+In this document we're going to demonstrate how you, {{{pr(user)}}}, can download and build the source code for GNU
 Emacs. The goal is to walk through each step of the process, and explain things as we go. By default, most systems do
 not have the necessary software components installed that are required to build GNU Emacs from source, so we'll also be
 installing a lot of software on your computer. You'll need =sudo= access for this, and this document assumes that your
 local user can run =sudo= without a password.
 
+** Installing git :redhat:
+By default, on the Fedora systems I tested on, the =git= tool is not installed, so the first thing we'll do is install it
+using the =dnf= package management tool. Here we provide the =-y= option so =dnf= doesn't ask us any questions.
+
+#+begin_src bash
+sudo dnf install -y git
+#+end_src
+
 ** Procuring the Source Code
-Now we just got to procure some source code.
+Now we just got to procure some source code. We'll do this using =git=
 
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
