@@ -222,14 +222,14 @@ we'll use the =--quiet= argument to suppress the copious amount of output that =
   sudo dnf install -y --quiet git
 #+end_src
 
-#+RESULTS[7c445774d435e806d5bafc4f9fd379665d112bcb]:
+#+RESULTS[0226e54065a340234927600b9187cd30d9ae9c4e]: rh_install_git
 #+begin_example
 
 Installed:
-  git-2.41.0-1.fc38.aarch64            git-core-2.41.0-1.fc38.aarch64
-  git-core-doc-2.41.0-1.fc38.noarch    perl-Error-1:0.17029-11.fc38.noarch
-  perl-Git-2.41.0-1.fc38.noarch        perl-TermReadKey-2.38-16.fc38.aarch64
-  perl-lib-0.65-497.fc38.aarch64
+  git-2.41.0-1.fc38.aarch64            git-core-2.41.0-1.fc38.aarch64          
+  git-core-doc-2.41.0-1.fc38.noarch    perl-Error-1:0.17029-11.fc38.noarch     
+  perl-Git-2.41.0-1.fc38.noarch        perl-TermReadKey-2.38-16.fc38.aarch64   
+  perl-lib-0.65-497.fc38.aarch64      
 
 #+end_example
 
