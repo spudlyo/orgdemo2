@@ -140,9 +140,11 @@ Emacs will appear to be locked up during this time.
 
 * Properties as Constants                                          :noexport:
 :PROPERTIES:
-:prefix: rh_
+:prefix: deb_
 :rh_user: a Fedora 38 user
 :deb_user: an Ubuntu 22.04 user
+:rh_install: sudo dnf install
+:deb_install: sudo apt-get install
 :END:
 The properties above define all the constants we're using throughout this document. Feel free to modify these constants
 to meet your own needs.
@@ -365,7 +367,33 @@ trivial progrmas you can run an incantation like =./configure && make && make in
 configure.ac
 #+end_example
 
-Looks like there isn't a =./configure= script for us to run, so we'll have to make one.
+Looks like there isn't a =configure= script for us to run, so we'll have to generate one. The =configure= script is
+generated using a tool called =autoconf= which is part of the GNU Build System, also known as Autotools. The =autoconf=
+tool reads the =configure.ac= file we saw above and uses that to generate the =configure= script we'll ultimately run.
+
+There is a script called =autogen.sh= that does this work for you. Let's run the script, and take a look at the first
+few lines of the output.
+
+#+caption: Run the autogen.sh script and show a bit of the output
+#+name: autogen
+#+begin_src bash
+  ./autogen.sh | head -3
+#+end_src
+
+#+RESULTS[4eb6833f6c77e0afe58ed4310ebc75d21f25d37a]: autogen
+#+begin_example
+Checking whether you have the necessary tools...
+(Read INSTALL.REPO for more details on building Emacs)
+Checking for autoconf (need at least version 2.65) ... missing
+#+end_example
+
+It looks like we're going to need to install =autoconf= before this is going to work for us. This should be easy enough
+to do.
+
+#+begin_src bash
+  <<get_prop("install")>> autoconf
+#+end_src
+
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
