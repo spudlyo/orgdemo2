@@ -8,7 +8,8 @@
 #+LATEX_HEADER: \usepackage{fancyvrb}
 #+LATEX_HEADER: \DefineVerbatimEnvironment{tinybox}{Verbatim}{fontsize=\tiny,frame=single}
 #+LATEX_HEADER: \DefineVerbatimEnvironment{smallbox}{Verbatim}{fontsize=\small,frame=single}
-#+LATEX_HEADER: \usepackage{listings} \lstset{showstringspaces=false}
+#+LATEX_HEADER: \usepackage{xcolor} \definecolor{light-gray}{gray}{0.95}
+#+LATEX_HEADER: \usepackage{listings} \lstset{showstringspaces=false, backgroundcolor=\color{light-gray}}
 #+LATEX_HEADER: \usepackage{fontspec}
 #+LATEX_HEADER: \setmonofont{JetBrains Mono}[Scale=MatchLowercase]
 #+LATEX_HEADER: \setmainfont{Inter}[Scale=MatchLowercase]
