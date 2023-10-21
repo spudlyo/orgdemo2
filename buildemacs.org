@@ -221,25 +221,16 @@ a specific tagged release of GNU Emacs.
 ** Installing Development Tools                                      :redhat:
 By default, on the Fedora systems I tested on, the =git= tool is not installed, so the first thing we'll do is install
 it, and some other development tools, using the =dnf= package management tool. Here we provide the =-y= option so =dnf=
-doesn't ask us any questions, and we'll use the =--quiet= argument to suppress the copious amount of output that =dnf=
-normally spits out.
+doesn't ask us any questions, and we'll redirect STDOUT and STDERR to =/dev/null= to suppress the copious amount of
+output that =dnf= spits out.
 
 #+caption: Install the the Development Tools group of packages
-#+name: rh_install_git
+#+name: rh_install_devtools
 #+begin_src bash :dir ~/
-  sudo dnf groupinstall -y --quiet git
+  sudo dnf groupinstall -y --quiet "Development Tools" >/dev/null 2>&1
 #+end_src
 
-#+RESULTS[0226e54065a340234927600b9187cd30d9ae9c4e]: rh_install_git
-#+begin_example
-
-Installed:
-  git-2.41.0-1.fc38.aarch64            git-core-2.41.0-1.fc38.aarch64          
-  git-core-doc-2.41.0-1.fc38.noarch    perl-Error-1:0.17029-11.fc38.noarch     
-  perl-Git-2.41.0-1.fc38.noarch        perl-TermReadKey-2.38-16.fc38.aarch64   
-  perl-lib-0.65-497.fc38.aarch64      
-
-#+end_example
+#+RESULTS[e47ce0ed8dba29e94038f234de67776a00b6ed1c]: rh_install_devtools
 
 ** Creating a source directory
 
