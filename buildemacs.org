@@ -1,4 +1,5 @@
 #+TITLE: Building Emacs from Source
+#+SUBTITLE: An essential guide
 #+AUTHOR: Mike Hamrick
 #+EMAIL: mikeh@muppetlabs.com
 #+OPTIONS: ^:nil date:t email:t num:2 tags:nil toc:nil
