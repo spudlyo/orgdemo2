@@ -506,6 +506,40 @@ compiler, GNU Make, and some libraries.
 
 #+RESULTS[e32146b70d108be5d1d3e1454bc6c98e526b0c1f]: install_build_essential
 
+** Running configure again
+Let's see what happens when we run =./configure= again. We'll provide our =--prefix= argument as per usual, and we'll
+also redirect STDERR to STDOUT so all the output goes to the same place. Since the =configure= script can output quite a
+large volume of text to the terminal we'll pipe it into =tail= to just see the last handful of lines. Finally we'll
+utilize the =bash= array variable =PIPESTATUS= (which holds the exit statuses of each command executed in the most
+recent pipeline) to determine if the script invocation failed, and if does fail we'll =echo= something.
+
+#+caption: Our first attempt at running configure
+#+name: configure_first
+#+begin_src bash
+  ./configure --prefix=<<tag_dir()>> 2>&1 | tail -5; [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+#+end_src
+
+#+RESULTS[600f149f668bc4edcff11c2bb59a08a950ba1aba]: configure_first
+#+begin_example
+checking for 'find' args to delete a file... -delete
+checking for brew... no
+configure: error: You do not seem to have makeinfo >= 4.13, and your
+source tree does not seem to have pre-built manuals in the 'info' directory.
+Please install a suitable version of makeinfo. 
+Configure failed!
+#+end_example
+
+Oops, looks like we don't have the =makeinfo= tool installed. GNU Texinfo is the official documentation format of the
+GNU project, and Emacs creates =info= files for the wealth of documentation that comes with it. By default on
+{{{pr(osver)}}} none of the GNU Texinfo tools (like =makeinfo=) are installed. Luckily we can install them ourselves!
+
+#+caption: Install the GNU Texinfo tools
+#+name: install_texinfo
+#+begin_src bash
+  echo <<get_prop("install")>> texinfo >/dev/null 2>&1
+#+end_src
+
+
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
 In this section we're going to set up some buffer local variables and run some code. This will allow this literate
