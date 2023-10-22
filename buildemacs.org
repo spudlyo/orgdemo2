@@ -552,17 +552,16 @@ let's install them now.
 #+end_src
 
 #+RESULTS[96772795ca32600810d841be66ccf99b0c5a6a36]: install_texinfo
+<<determine_package_name>>
+Now you might be asking yourself, "How did you know that the =makeinfo= tool is in the =texinfo= package?". That's a good
+question! It's not immediately obvious that =makeinfo= is part of the GNU Texinfo system, and without that key bit of
+information it'd be a real struggle to figure out which package to install to satisfy the missing dependency.
 
-Now you might be asking yourself, "How do you know that the =makeinfo= tool is in the =texinfo= package?". It might not
-be obvious to you that =makeinfo= is part of the GNU Texinfo system, and if you didn't know that you'd likely struggle
-to figure out the name of the package to install to get the =makeinfo= program that the =configure= script is
-complaining about!
+*** Determining the package name for a given a filename              :debian:
+Luckily there's a handy tool called =apt-file= that you can install that searches for packages that contain specific
+filenames.
 
-*** Determining the package name :debian:
-Luckily there is a handy tool called =apt-file= that you can install that can help you search packages looking for
-specific files.
-
-#+caption: Install apt-file and update the database
+#+caption: Install apt-file and update its database
 #+name: install_apt_file
 #+begin_src bash
   sudo apt-get install -qq apt-file >/dev/null 2>&1
@@ -571,7 +570,7 @@ specific files.
 
 #+RESULTS[8bc0f5f65c0314817e5832f02240290e58504a41]: install_apt_file
 Now that it's installed you can see it in action. To cut down on false positives, we're running =apt-file search= with
-the =--regex= option to use a regular expression search for files that end in =makeinfo=.
+the =--regex= option to use a regular expression to search for files that end in =makeinfo=.
 
 #+caption: Use apt-file to preform a regex search on makeinfo
 #+name: apt_file_search
@@ -588,9 +587,9 @@ texinfo: /usr/bin/makeinfo
 There you have it, =/usr/bin/makeinfo= is very likely the binary we're looking for, and we can see it comes from the
 =texinfo= package!
 
-*** Determining the package name :redhat:
-The =dnf= tool has a =provides= subcommand that you can use to determine which package a given file exists in. We can
-use this to determine which package that the =makeinfo= command is in.
+*** Determining the package name for a given filename                :redhat:
+Luckily the =dnf= tool has a =provides= subcommand that you can use to determine which package a given file exists
+in. We can use this to determine which package that the =makeinfo= command is in.
 
 #+caption: Use "dnf provides" to find the package containing makeinfo
 #+name: dnf_provides
@@ -643,8 +642,46 @@ install the necessary package to resolve the dependency.
 #+end_src
 
 #+RESULTS[401e2733259a294b3c15c1f1e49122e558af0356]: install_gnutls
+With libraries it's helpful to know the traditional UNIX conventions of how libraries are named on the filesystem. For
+example if you had a library called =foo=, there would be a file somewhere on the filesystem named =libfoo.so= that is
+the =foo= library in the /shared object/ format, and likely another file named =libfoo.a= which is the same library the
+the /archive/ format. Armed with this knowledge you can use the techniques we discussed in section
+[[determine_package_name]] to determine that the GnuTLS library is part of the {{{p(gnutls)}}} package.
 
 ** Installing the ncurses library
+
+Here we go again with another run of the =configure= program to learn what our next missing dependency is!
+
+#+caption: 
+#+name: configure_no_ncurses
+#+begin_src bash
+  ./configure --prefix=<<tag_dir()>> 2>&1 | tail -6
+  [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+#+end_src
+
+#+RESULTS[aa8fc505a78fd8220e5292a49a112eac9bb3cd63]: configure_no_ncurses
+#+begin_example
+configure: error: The required function 'tputs' was not found in any library.
+The following libraries were tried (in order):
+  libtinfo, libncurses, libterminfo, libcurses, libtermcap
+Please try installing whichever of these libraries is most appropriate
+for your system, together with its header files.
+For example, a libncurses-dev(el) or similar package.
+Configure failed!
+#+end_example
+
+Oops, looks like we don't have the =ncurses= library installed. =ncurses= is a terminal control library for Unix-like
+systems that allows you to do fancy terminal tricks necessary for sophisticated TUI applications like Emacs. The
+original library was named =curses= which is a bit of a pun on the term "cursor", which is something the library lets
+you move around in an terminal independent fashion. Today we'll be installing =ncurses=, which is the "new" version of
+the library. I'm using the term "new" loosely here as =ncurses= was originally released around 30 years ago.
+
+#+caption: Install the the ncurses library
+#+name: install_ncurses
+#+begin_src bash
+  <<get_prop("install")>> <<get_prop("ncurses")>> >/dev/null 2>&1
+#+end_src
+
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
