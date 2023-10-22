@@ -243,10 +243,10 @@ In this chapter I'll demonstrate how to download the Emacs source code using =gi
 a specific tagged release of GNU Emacs.
 
 ** Installing Development Tools                                      :redhat:
-By default, on the {{{pr(osver)}}} systems I tested on, the =git= tool is not installed, so the first thing we'll do is
-install it, and some other development tools, using the =dnf= package management tool. Here we provide the =-y= option
-so =dnf= doesn't ask us any questions, and we'll redirect STDOUT and STDERR to =/dev/null= to suppress the copious
-amount of output that =dnf= spits out.
+By default, on the {{{pr(osver)}}} systems I tested on, the =git= program is not installed, so the first thing we'll do
+is install it, and some other development tools, using the =dnf= package manager. Here we provide the =-y= option so
+=dnf= doesn't ask us any questions, and we'll redirect STDOUT and STDERR to =/dev/null= to suppress the copious amount
+of output that =dnf= spits out.
 
 #+caption: Install the the Development Tools group of packages
 #+name: rh_install_devtools
@@ -258,9 +258,8 @@ amount of output that =dnf= spits out.
 
 ** Creating a source directory
 
-The first thing we're going to want to do is to create a =~/src= directory beneath our home directory where all our
-source code is going to live. We'll also change our current working directory to this directory. This helps keep things
-tidy.
+Let's kick things off by creating a =~/src= directory beneath our home directory where all our source code is going to
+live. We'll also change our current working directory to this directory. This helps keep things tidy.
 
 #+caption: Create and cd to our source directory
 #+name: create_src_dir
@@ -337,7 +336,7 @@ releases of Emacs 29. We'll be working with the version tagged {{{srv(emacs_tag)
 ** Creating the branch
 
 Now that we've figured out which version tag we're going to want to use as the base for the version of Emacs that we're
-building it's time to create a branch associated with that tag. Because we just cloned the repository, we're currently
+building, it's time to create a branch associated with that tag. Because we just cloned the repository, we're currently
 on at the default branch.
 
 #+caption: Ask git the name of our current branch
@@ -352,7 +351,7 @@ master
 #+end_example
 
 For our purposes, we don't want to build Emacs from the {{{srv(git_branch)}}} branch, instead let's create a branch that
-points to the same commit as the {{{sr(emacs_tag)}}} tag that we identified in section [[tags]].
+points to the same commit as the {{{srv(emacs_tag)}}} tag that we identified in section [[tags]].
 
 #+caption: Create a branch that points to a specific tag
 #+name: create_branch
@@ -373,9 +372,10 @@ We're good to go, we've created our branch at our tagged location and now we can
 :header-args:bash:  :results output :dir ~/src/emacs
 :END:
 If you've ever built an old-school UNIX program from source, you've probably run a =./configure= script. This script
-tests specific details about the environment it's running under in order to inform the build process how it should build
-the code in a way that works with the operating system and libraries that exist on the system. Normally when building
-trivial programs you can run an incantation like =./configure && make && make install= and you're good to go.
+tests specific details about the environment it's running under in order to inform the build process how it should
+interact with the code in a way that's compatible with the operating system and libraries that exist on the
+system. Normally when building trivial programs you can run an incantation like =./configure && make && make install=
+and you're good to go.
 
 Let's see if we can find a suitable =./configure= script in the Emacs repository.
 
@@ -591,9 +591,22 @@ There you have it, =/usr/bin/makeinfo= is very likely the binary we're looking f
 The =dnf= tool has a =provides= subcommand that you can use to determine which package a given file exists in. We can
 use this to determine which package that the =makeinfo= command is in.
 
+#+caption: Use "dnf provides" to find the package containing makeinfo
+#+name: dnf_provides
 #+begin_src bash
-  dnf provides makeinfo
+  dnf provides makeinfo | head -5
 #+end_src
+
+#+RESULTS[80cc75d1d039e60d9821c0272d9981df486cb660]: dnf_provides
+#+begin_example
+Last metadata expiration check: 1:06:03 ago on Sun 22 Oct 2023 12:13:31 AM PDT.
+texinfo-7.0.2-2.fc38.aarch64 : Tools needed to create Texinfo format documentation files
+Repo        : @System
+Matched from:
+Filename    : /usr/bin/makeinfo
+#+end_example
+
+There you have it, from the  output above you can see the file =/usr/bin/makeinfo= is part of the texinfo package!
 
 ** Installing the GNU TLS Library
 Let's run =./configure= yet again and see what happens! Anticipating more errors, we'll run it much the same way as last
