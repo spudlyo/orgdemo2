@@ -245,7 +245,7 @@ tidy.
   mkdir -p ~/src; cd ~/src
 #+end_src
 
-#+RESULTS[9ad8416d923624d8c4e12a96d06af904c4b71b6d]: create_src_dir
+#+RESULTS[1e510283b8ed64f004699221b06b8f48feef95c8]: create_src_dir
 
 ** Cloning the Repo
 The next thing we'll want to do is clone the Emacs repository from /Savannah/, the software forge hosted by the Free
