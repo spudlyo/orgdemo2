@@ -259,7 +259,7 @@ complete. We'll provide the =--quiet= to =git= here to tell it not to report its
   cd emacs
   #+end_src
 
-#+RESULTS[9cee994c337fcfab0672e687b456621eefdfaffc]:
+  #+RESULTS[8c1c3caeaa94401e641350ecb1d16751ba044fdf]: clone_repo
 
 ** Digging into the tags
 <<tags>>
@@ -273,10 +273,10 @@ run =git tag= to list all the available tags.
   git tag | wc -l
   #+end_src
 
-#+RESULTS[c2efae208543a8f8e8644df957aa5644f30946ee]: num_tags
-#+begin_example
-     184
-#+end_example
+  #+RESULTS[bff0bbcb583233629cc6dabd0d6296379d4f1cc8]: num_tags
+  #+begin_example
+  183
+  #+end_example
 
 Wow {{{r(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
 =git tag= command with the =--list= argument (using the shell wildcard syntax) as well as specificying the =--sort= option
@@ -289,7 +289,7 @@ single line of annotation for the tag.
   git tag --list 'emacs-29.*' --sort=-taggerdate -n1
 #+end_src
 
-#+RESULTS[8fdd872125ec58e33cba350c8016bf3f6bbf4c0c]: sorted_tags
+#+RESULTS[fa306c1f9b3f73ea2220e75183509c97a622ef59]: sorted_tags
 #+begin_example
 emacs-29.1.90   Emacs 29.1.90 pretest
 emacs-29.1      Emacs 29.1
@@ -323,7 +323,7 @@ on at the default branch.
   git branch --show-current
 #+end_src
 
-#+RESULTS[fb4c714352ffd54d2a61f1f04b4411ebe83a2b39]: git_branch
+#+RESULTS[853780933fd9180c73d0352492b67618b70a2c0c]: git_branch
 #+begin_example
 master
 #+end_example
@@ -337,7 +337,7 @@ points to the same commit as the {{{sr(emacs_tag)}}} tag that we identified in s
   git checkout -b mybranch tags/<<emacs_tag()>> 2>&1
 #+end_src
 
-#+RESULTS[d6f3ff140c09067d55391d42b80a474e39409954]: create_branch
+#+RESULTS[7f3bf7669e1efbb91dd5fd9cfedda00ebbecfe75]: create_branch
 #+begin_example
 Switched to a new branch 'mybranch'
 #+end_example
@@ -360,7 +360,7 @@ trivial progrmas you can run an incantation like =./configure && make && make in
   ls configure*
 #+end_src
 
-#+RESULTS[bab83ce9cb4a0badb8e071311cea3aa80fd3e4e3]: where_configure
+#+RESULTS[b55a980ceb18f9d71f4108e331b7f52e0340597b]: where_configure
 #+begin_example
 configure.ac
 #+end_example
