@@ -85,7 +85,8 @@ Debian packages to generate LaTeX PDF output. The block below that is for RedHat
 *NOTE:* This can take several minutes to run, during which time Emacs may appear to be locked up as this work is /not/ done
 asynchronously. This is around 1.5GB of packages, so make sure you have the space available.
 
-#+CAPTION: Install LaTeX Prerequisites on Debian based systems
+#+caption: Install LaTeX Prerequisites on Debian based systems
+#+name: deb_install_latex
 #+begin_src bash :eval never-export :results output replace
   sudo apt-get install -qq \
        texlive-latex-extra \
@@ -97,7 +98,8 @@ asynchronously. This is around 1.5GB of packages, so make sure you have the spac
        fonts-inter
 #+end_src
 
-#+CAPTION: Install LaTeX Prerequisites on RedHat based systems
+#+caption: Install LaTeX Prerequisites on RedHat based systems
+#+name: rh_install_latex
 #+begin_src bash :eval never-export :results output replace
   sudo dnf install -y \
        texlive-latex \
@@ -127,6 +129,7 @@ you export the document it should run all the source code blocks. Annoyingly it 
 to never confirm the execution of any source block.
 
 # You know what you're doing, right? Right!?
+#+name: no_babel_confirm
 #+begin_src elisp :eval never-export
 (setq org-confirm-babel-evaluate nil)
 #+end_src
@@ -203,7 +206,7 @@ local user can run =sudo= without a password.
 * Obtaining the Source Code
 :PROPERTIES:
 :header-args:       :noweb yes :exports both :cache yes
-:header-args:bash:  :results output
+:header-args:bash:  :results output :dir ~/src/emacs
 :END:
 In this chapter I'll demonstrate how to download the Emacs source code using =git= and how to set your view of the code to
 a specific tagged release of GNU Emacs.
@@ -214,7 +217,8 @@ it using the =dnf= package management tool. Here we provide the =-y= option so =
 we'll use the =--quiet= argument to suppress the copious amount of output that =dnf= normally spits out.
 
 #+caption: Install the git package
-#+begin_src bash
+#+name: rh_install_git
+#+begin_src bash :dir ~/
   sudo dnf install -y --quiet git
 #+end_src
 
@@ -236,11 +240,12 @@ source code is going to live. We'll also change our current working directory to
 tidy.
 
 #+caption: Create and cd to our source directory
-#+begin_src bash
+#+name: create_src_dir
+#+begin_src bash :dir ~/
   mkdir -p ~/src; cd ~/src
 #+end_src
 
-#+RESULTS[9ad8416d923624d8c4e12a96d06af904c4b71b6d]:
+#+RESULTS[9ad8416d923624d8c4e12a96d06af904c4b71b6d]: create_src_dir
 
 ** Cloning the Repo
 The next thing we'll want to do is clone the Emacs repository from /Savannah/, the software forge hosted by the Free
@@ -248,6 +253,7 @@ Software Foundation. This will be a full clone, complete with history, branches,
 complete. We'll provide the =--quiet= to =git= here to tell it not to report its progress to the screen.
 
 #+caption: Clone the Emacs git repository from Savannah
+#+name: clone_repo
 #+begin_src bash :dir ~/src
   git clone --quiet https://git.savannah.gnu.org/git/emacs.git
   cd emacs
@@ -255,10 +261,8 @@ complete. We'll provide the =--quiet= to =git= here to tell it not to report its
 
 #+RESULTS[9cee994c337fcfab0672e687b456621eefdfaffc]:
 
-** Checking out the tags
-:PROPERTIES:
-:header-args:bash+:  :dir ~/src/emacs
-:END:
+** Digging into the tags
+<<tags>>
 Now that we've cloned the repository and set our current working directory to =~/src/emacs= let's take a look at some
 tags. Emacs uses =git= tags to capture a point in the commit history that marks the release of a specific version. We can
 run =git tag= to list all the available tags.
@@ -274,25 +278,94 @@ run =git tag= to list all the available tags.
      184
 #+end_example
 
-Wow {{{r(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29.
+Wow {{{r(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
+=git tag= command with the =--list= argument (using the shell wildcard syntax) as well as specificying the =--sort= option
+to sort the tags by when the tag object in the database was created. We'll also specify the =-n= argument to print a
+single line of annotation for the tag.
 
+#+caption: List all the tags for Emacs version 29 sorted by date in decending tagged date order
+#+name: sorted_tags
 #+begin_src bash
-git tag --list 'emacs-29*'
+  git tag --list 'emacs-29.*' --sort=-taggerdate -n1
 #+end_src
 
-#+RESULTS[e5b10d46029cda3035fa5bab7099bb6a3bd87420]:
+#+RESULTS[8fdd872125ec58e33cba350c8016bf3f6bbf4c0c]: sorted_tags
 #+begin_example
-emacs-29
-emacs-29.0.90
-emacs-29.0.91
-emacs-29.0.92
-emacs-29.1
-emacs-29.1-rc1
-emacs-29.1.90
+emacs-29.1.90   Emacs 29.1.90 pretest
+emacs-29.1      Emacs 29.1
+emacs-29.1-rc1  Emacs 29.1 RC1
+emacs-29.0.92   Emacs 29.0.92
+emacs-29.0.91   Emacs 29.0.91 pretest
+emacs-29.0.90   Emacs 29.0.90 pretest
 #+end_example
 
+#+name: emacs_tag
+#+begin_src elisp :results value :exports none :var text=sorted_tags :cache yes
+(with-temp-buffer
+  (insert text) (beginning-of-buffer)
+  (if (re-search-forward "\\(\\S-+\\)" nil t)
+      (match-string 1)
+    nil))
+#+end_src
+
 You might get a slightly different list when you run the command, but as of this writing, those are all the tagged
-releases of Emacs 29.
+releases of Emacs 29. We'll be working with the version tagged {{{srv(emacs_tag)}}}, as that's the most recent.
+
+** Creating the branch
+
+Now that we've figured out which version tag we're going to want to use as the base for the version of Emacs that we're
+building it's time to create a branch associated with that tag. Because we just cloned the repository, we're currently
+on at the default branch.
+
+#+caption: Ask git the name of our current branch
+#+name: git_branch
+#+begin_src bash
+  git branch --show-current
+#+end_src
+
+#+RESULTS[fb4c714352ffd54d2a61f1f04b4411ebe83a2b39]: git_branch
+#+begin_example
+master
+#+end_example
+
+For our purposes, we don't want to build Emacs from the {{{srv(git_branch)}}} branch, instead let's create a branch that
+points to the same commit as the {{{sr(emacs_tag)}}} tag that we identified in section [[tags]].
+
+#+caption: Create a branch that points to a specific tag
+#+name: create_branch
+#+begin_src bash
+  git checkout -b mybranch tags/<<emacs_tag()>> 2>&1
+#+end_src
+
+#+RESULTS[d6f3ff140c09067d55391d42b80a474e39409954]: create_branch
+#+begin_example
+Switched to a new branch 'mybranch'
+#+end_example
+
+We're good to go, we've created our branch at our tagged location and now we can start working on building the program!
+
+* Creating the ./configure script
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output :dir ~/src/emacs
+:END:
+If you've ever built an old-school UNIX program from source, you've probably run the =./configure= script. This script
+tests specific details about the environment it's running under in order to inform the build process how it should build
+the code in a way that works with the operating system and libraries that exist on the system. Normally when building
+trivial progrmas you can run an incantation like =./configure && make && make install= and you're good to go.
+
+#+caption: Look for the configure script
+#+name: where_configure
+#+begin_src bash
+  ls configure*
+#+end_src
+
+#+RESULTS[bab83ce9cb4a0badb8e071311cea3aa80fd3e4e3]: where_configure
+#+begin_example
+configure.ac
+#+end_example
+
+Looks like there isn't a =./configure= script for us to run, so we'll have to make one.
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
