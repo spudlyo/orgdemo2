@@ -473,18 +473,18 @@ code, and documentation. All of of these directories will be created beneath the
 =--prefix= argument. We'll use {{{s(tag_dir)}}} as our prefix directory, this way we can potentially build and
 install multiple tagged versions of Emacs without conflict.
 
-** Running configure                                                 :debian:
-Let's see what happens when we run =./configure= for the first time. We'll provide our =--prefix= argument and we'll
-also redirect STDERR to STDOUT so all the output goes to the same place. Finally we'll take advantage of the =bash=
-logical OR (=||=) short-circuit to echo a message if =configure= returns a non-zero exit code.
+** Installing the build essential meta-package                       :debian:
+Let's run =./configure= and see what happens. We'll provide our =--prefix= argument and we'll also redirect STDERR to
+STDOUT so all the output goes to the same place. Finally we'll take advantage of the =bash= logical OR (=||=)
+short-circuit to echo a message if =configure= returns a non-zero exit code.
 
 #+caption: Our first attempt at running configure
-#+name: configure_first
+#+name: configure_no_make
 #+begin_src bash
   ./configure --prefix=<<tag_dir()>> 2>&1 || echo Configure failed!
 #+end_src
 
-#+RESULTS[89c7b86937fc395d7e266087ed1a997523114667]: configure_first
+#+RESULTS[89c7b86937fc395d7e266087ed1a997523114667]: configure_no_make
 #+begin_example
 checking for xcrun... no
 checking for GNU Make... 
@@ -506,20 +506,21 @@ compiler, GNU Make, and some libraries.
 
 #+RESULTS[e32146b70d108be5d1d3e1454bc6c98e526b0c1f]: install_build_essential
 
-** Running configure again
-Let's see what happens when we run =./configure= again. We'll provide our =--prefix= argument as per usual, and we'll
-also redirect STDERR to STDOUT so all the output goes to the same place. Since the =configure= script can output quite a
-large volume of text to the terminal we'll pipe it into =tail= to just see the last handful of lines. Finally we'll
-utilize the =bash= array variable =PIPESTATUS= (which holds the exit statuses of each command executed in the most
-recent pipeline) to determine if the script invocation failed, and if does fail we'll =echo= something.
+** Installing GNU Texinfo
+Let's run =./configure= and see what happens. We'll provide our =--prefix= option and redirect STDERR to STDOUT so all
+the output goes to the same place. Since the =configure= script can output quite a large volume of text to the terminal
+we'll also pipe the output into =tail -5= to just see the last handful of lines. Finally we'll utilize the =bash= array
+variable =PIPESTATUS= (which holds the exit statuses of each command executed in the most recent pipeline) to determine
+if the script invocation failed, and if does fail we'll =echo= our error message.
 
-#+caption: Our first attempt at running configure
-#+name: configure_first
+#+caption: 
+#+name: configure_no_texinfo
 #+begin_src bash
-  ./configure --prefix=<<tag_dir()>> 2>&1 | tail -5; [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+  ./configure --prefix=<<tag_dir()>> 2>&1 | tail -5
+  [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
 #+end_src
 
-#+RESULTS[600f149f668bc4edcff11c2bb59a08a950ba1aba]: configure_first
+#+RESULTS[00671bba10d837ec06b27855640085d0d766d6f6]: configure_no_texinfo
 #+begin_example
 checking for 'find' args to delete a file... -delete
 checking for brew... no
@@ -530,15 +531,17 @@ Configure failed!
 #+end_example
 
 Oops, looks like we don't have the =makeinfo= tool installed. GNU Texinfo is the official documentation format of the
-GNU project, and Emacs creates =info= files for the wealth of documentation that comes with it. By default on
-{{{pr(osver)}}} none of the GNU Texinfo tools (like =makeinfo=) are installed. Luckily we can install them ourselves!
+GNU project, and the Emacs build processes uses =makeinfo= to build the =info= files for the wealth of documentation
+that comes with it. By default on {{{pr(osver)}}} none of the GNU Texinfo tools (like =makeinfo=) are installed, so
+let's install them now.
 
 #+caption: Install the GNU Texinfo tools
 #+name: install_texinfo
 #+begin_src bash
-  echo <<get_prop("install")>> texinfo >/dev/null 2>&1
+  <<get_prop("install")>> texinfo >/dev/null 2>&1
 #+end_src
 
+#+RESULTS[96772795ca32600810d841be66ccf99b0c5a6a36]: install_texinfo
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
