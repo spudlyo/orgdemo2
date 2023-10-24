@@ -22,16 +22,25 @@ This file is a literate Org-mode document. It is intended to be "run" by GNU Ema
 execute =bash= shell code in order to demonstrate how to create install packages and build Emacs. Out of the
 box however, all exported =bash= code blocks include cached results from a previous run. This means no bash code blocks
 will be executed on your system. If Emacs ever asks you if you want to execute a =bash= source code block, it means
-something is no longer cached and you should be very wary of saying "yes" unless you know what you're doing.
+something is no longer cached and you should be wary of saying "yes" unless you know what you're doing.
 
 This Org-mode document you're currently viewing can be seen as "source code" that produces a document that explains how
-to build Emacs from scratch. The hope is that this Org-mode source code is useful for understanding how to create
-nice-looking literate Org-mode documents. The resulting document that it produces I hope some people might find
-interesting, but ultimately it's not important for the purposes of understanding how Org-mode works.
+to build Emacs from scratch on both RedHat and Debian based systems. The hope is that this Org-mode source code is
+useful for understanding how to create nice-looking literate Org-mode documents. The resulting document that it produces
+I hope some people might find interesting, but ultimately it's not important for the purposes of understanding how
+Org-mode works.
 
 ** Operating System Prerequisites
 This document is intended to be "run" on a GNU/Linux system. It has been tested on both RedHat based systems (Fedora
 release 38 server edition) and Debian based systems (Ubuntu Server 22.04).
+
+** Chosing which version of the document to export
+The doccument will will differ slightly depending on which version of the document you chose to export. By default, if
+this document is not altered in any way, you will get the Debian/Ubuntu version of the document. If you wish to export
+the RedHat/Fedora version of the document you will need to:
+
+- Change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian"
+- Change the ":prefix:" property in section [[constants]] to "rh_"
 
 *** Using the 'sudo' command
 Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a privileged
@@ -123,9 +132,9 @@ document]] and manually press =C-c C-c= on each code block. This will require yo
 can do by modifying the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
 precise control of when the blocks are executed, and lets you observe each result before moving to the next block.
 
-Alternately can change the default header arg from =:cache yes= to =:cache no= in the [[main document]]. Once you do this, when
-you export the document it should run all the source code blocks. Annoyingly it will prompt you for confirmation on each
-=bash= and =sql= code block. If you'd like to change this, you can hit =C-c C-c= on the block below which will cause Org-mode
+Alternately can change the default header arg from =:cache yes= to =:cache no= in the [[main document]]. Once you do this,
+when you export the document it should run all the source code blocks. Annoyingly it will prompt you for confirmation on
+each =bash= code block. If you'd like to change this, you can hit =C-c C-c= on the block below which will cause Org-mode
 to never confirm the execution of any source block.
 
 # You know what you're doing, right? Right!?
@@ -143,11 +152,18 @@ Emacs will appear to be locked up during this time.
 :prefix: deb_
 :rh_user: a Fedora 38 user
 :deb_user: an Ubuntu 22.04 user
+:deb_osver: Ubuntu Server 22.04
+:rh_osver: Fedora Server 38
 :rh_install: sudo dnf install -y
 :deb_install: sudo apt-get install -qq
 :END:
-The properties above define all the constants we're using throughout this document. Feel free to modify these constants
-to meet your own needs.
+<<constants>>
+The properties above define all the constants we're using throughout this document. By default, when you
+run this document it will describe how to build GNU Emacs under a Debian based system. In order to build the
+RedHat/Debian version of the document you must:
+
+- Change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian"
+- Change the ":prefix:" property above to "rh_"
 
 * Code                                                             :noexport:
 What follows is code that will be used throughout the document.
@@ -219,10 +235,10 @@ In this chapter I'll demonstrate how to download the Emacs source code using =gi
 a specific tagged release of GNU Emacs.
 
 ** Installing Development Tools                                      :redhat:
-By default, on the Fedora systems I tested on, the =git= tool is not installed, so the first thing we'll do is install
-it, and some other development tools, using the =dnf= package management tool. Here we provide the =-y= option so =dnf=
-doesn't ask us any questions, and we'll redirect STDOUT and STDERR to =/dev/null= to suppress the copious amount of
-output that =dnf= spits out.
+By default, on the {{{pr(osver)}}} systems I tested on, the =git= tool is not installed, so the first thing we'll do is
+install it, and some other development tools, using the =dnf= package management tool. Here we provide the =-y= option
+so =dnf= doesn't ask us any questions, and we'll redirect STDOUT and STDERR to =/dev/null= to suppress the copious
+amount of output that =dnf= spits out.
 
 #+caption: Install the the Development Tools group of packages
 #+name: rh_install_devtools
@@ -277,7 +293,7 @@ run =git tag= to list all the available tags.
   183
   #+end_example
 
-Wow {{{r(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
+Wow {{{s(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
 =git tag= command with the =--list= argument (using the shell wildcard syntax) as well as specifying the =--sort= option
 to sort the tags by when the tag object in the database was created. We'll also specify the =-n= argument to print a
 single line of annotation for the tag.
@@ -434,8 +450,61 @@ Now if we look for the =./configure= script again, it should be there!
 Wow, that is one huge shell script! When was the last time /you/ wrote a shell script that was
 call_lsplit(where_configure_redux) bytes long?!
 
-* Running Configure
+* Configuring the build process
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output :dir ~/src/emacs
+:END:
 
+#+name: tag_dir 
+#+begin_src elisp :results value :exports none :var text=emacs_tag :cache yes
+(concat "$HOME/" text)
+#+end_src
+
+In this section we're going to run the =./configure= script to kick off the configuration process. Initially we're not
+going to specify which Emacs features we want to enable or get into any specifics of how it is built. Instead we're
+going to see what it takes to build a minimal version of Emacs and what we get without tweaking the process.
+
+** The prefix argument
+One argument we /will/ be providing to the configure script will be the =--prefix= option. This tells the script the
+base directory of where all the files should be installed. By default, when we later run =make install=, there will be a
+number of directories created for both architecture dependent and indepent files like binaries, libaries, Emacs Lisp
+code, and documentation. All of of these directories will be created beneath the directory we specify with our
+=--prefix= argument. We'll use {{{s(tag_dir)}}} as our prefix directory, this way we can potentially build and
+install multiple tagged versions of Emacs without conflict.
+
+** Running configure                                                 :debian:
+Let's see what happens when we run =./configure= for the first time. We'll provide our =--prefix= argument and we'll
+also redirect STDERR to STDOUT so all the output goes to the same place. Finally we'll take advantage of the =bash=
+logical OR (=||=) short-circuit to echo a message if =configure= returns a non-zero exit code.
+
+#+caption: Our first attempt at running configure
+#+name: configure_first
+#+begin_src bash
+  ./configure --prefix=<<tag_dir()>> 2>&1 || echo Configure failed!
+#+end_src
+
+#+RESULTS[89c7b86937fc395d7e266087ed1a997523114667]: configure_first
+#+begin_example
+checking for xcrun... no
+checking for GNU Make... 
+configure: error: Building Emacs requires GNU Make, at least version 3.81.
+If you have it installed under another name, configure with 'MAKE=...'.
+For example, run './configure MAKE=gnu-make'.
+Configure failed!
+#+end_example
+
+Oops, looks like we don't have GNU Make installed. By default on {{{pr(osver)}}} there aren't any development or build
+tools installed. We can solve this problem by installing the =build-essential= meta-package, which installs a C/C++
+compiler, GNU Make, and some libraries.
+
+#+caption: Install the build-essential meta-package and send the output to /dev/null
+#+name: install_build_essential
+#+begin_src bash
+  <<get_prop("install")>> build-essential >/dev/null 2>&1
+#+end_src
+
+#+RESULTS[e32146b70d108be5d1d3e1454bc6c98e526b0c1f]: install_build_essential
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
