@@ -29,7 +29,7 @@ to build Emacs from scratch. The hope is that this Org-mode source code is usefu
 nice-looking literate Org-mode documents. The resulting document that it produces I hope some people might find
 interesting, but ultimately it's not important for the purposes of understanding how Org-mode works.
 
-** Operating System Prerequisities
+** Operating System Prerequisites
 This document is intended to be "run" on a GNU/Linux system. It has been tested on both RedHat based systems (Fedora
 release 38 server edition) and Debian based systems (Ubuntu Server 22.04).
 
@@ -120,7 +120,7 @@ asynchronously. This is around 1.5GB of packages, so make sure you have the spac
 <<executing code>>
 If you do want to actually execute the code in this document, you have a couple of options. You can navigate to the [[main
 document]] and manually press =C-c C-c= on each code block. This will require you to invalidate the cache first, which you
-can do by modifing the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
+can do by modifying the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
 precise control of when the blocks are executed, and lets you observe each result before moving to the next block.
 
 Alternately can change the default header arg from =:cache yes= to =:cache no= in the [[main document]]. Once you do this, when
@@ -150,7 +150,7 @@ The properties above define all the constants we're using throughout this docume
 to meet your own needs.
 
 * Code                                                             :noexport:
-What follows is code that will be used throughtout the document.
+What follows is code that will be used throughout the document.
 
 #+name: lsplit
 #+begin_src elisp :results value :exports none :var line="foo bar\nbaz" :cache yes
@@ -286,11 +286,11 @@ run =git tag= to list all the available tags.
   #+end_example
 
 Wow {{{r(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
-=git tag= command with the =--list= argument (using the shell wildcard syntax) as well as specificying the =--sort= option
+=git tag= command with the =--list= argument (using the shell wildcard syntax) as well as specifying the =--sort= option
 to sort the tags by when the tag object in the database was created. We'll also specify the =-n= argument to print a
 single line of annotation for the tag.
 
-#+caption: List all the tags for Emacs version 29 sorted by date in decending tagged date order
+#+caption: List all the tags for Emacs version 29 sorted by date in descending tagged date order
 #+name: sorted_tags
 #+begin_src bash
   git tag --list 'emacs-29.*' --sort=-taggerdate -n1
@@ -359,8 +359,9 @@ We're good to go, we've created our branch at our tagged location and now we can
 If you've ever built an old-school UNIX program from source, you've probably run a =./configure= script. This script
 tests specific details about the environment it's running under in order to inform the build process how it should build
 the code in a way that works with the operating system and libraries that exist on the system. Normally when building
-trivial progrmas you can run an incantation like =./configure && make && make install= and you're good to go. Let's see
-if such a script exists in the Emacs repo.
+trivial programs you can run an incantation like =./configure && make && make install= and you're good to go.
+
+Let's see if we can find a suitable =./configure= script in the Emacs repository.
 
 #+caption: Look for the configure script
 #+name: where_configure
@@ -377,11 +378,11 @@ Looks like there isn't a =configure= script for us to run, so we'll have to gene
 generated using a tool called =autoconf= which is part of the GNU Build System, also known as Autotools. The =autoconf=
 tool reads the =configure.ac= file we saw above and uses that to generate the =configure= script we'll ultimately run.
 
+** Running the autogen.sh script
 There is a script called =autogen.sh= that drives this process. It also modifies your cloned =.git/config= configuration
-file as well as adding various hooks in =.git/hooks= that are suitable for Emacs development.
-
-Let's run the script, and take a look at the first few lines of the output. We'll run =autogen.sh= with the =autoconf=
-argument to tell it to only generate the =configure= script, and to leave our git configuration untouched.
+file as well as adding various hooks in =.git/hooks= that are suitable for Emacs development. Let's run the script, and
+take a look at the first few lines of the output. We'll run =autogen.sh= with the =autoconf= argument to tell it to only
+generate the =configure= script, and to leave our git configuration untouched.
 
 #+caption: Run the autogen.sh script and show a bit of the output
 #+name: autogen
@@ -439,7 +440,6 @@ Now if we look for the =./configure= script again, it should be there!
 
 Wow, that is one huge shell script! When was the last time /you/ wrote a shell script that was
 call_lsplit(where_configure_redux) bytes long?!
-
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
