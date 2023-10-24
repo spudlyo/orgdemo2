@@ -143,14 +143,19 @@ Emacs will appear to be locked up during this time.
 :prefix: deb_
 :rh_user: a Fedora 38 user
 :deb_user: an Ubuntu 22.04 user
-:rh_install: sudo dnf install
-:deb_install: sudo apt-get install
+:rh_install: sudo dnf install -y
+:deb_install: sudo apt-get install -qq
 :END:
 The properties above define all the constants we're using throughout this document. Feel free to modify these constants
 to meet your own needs.
 
 * Code                                                             :noexport:
 What follows is code that will be used throughtout the document.
+
+#+name: lsplit
+#+begin_src elisp :results value :exports none :var line="foo bar\nbaz" :cache yes
+(car (split-string line))
+#+end_src
 
 #+name: get_prop
 #+begin_src elisp :results value :exports none :var prop="test"
@@ -346,15 +351,16 @@ Switched to a new branch 'mybranch'
 
 We're good to go, we've created our branch at our tagged location and now we can start working on building the program!
 
-* Creating the ./configure script
+* Creating the configure script
 :PROPERTIES:
 :header-args:       :noweb yes :exports both :cache yes
 :header-args:bash:  :results output :dir ~/src/emacs
 :END:
-If you've ever built an old-school UNIX program from source, you've probably run the =./configure= script. This script
+If you've ever built an old-school UNIX program from source, you've probably run a =./configure= script. This script
 tests specific details about the environment it's running under in order to inform the build process how it should build
 the code in a way that works with the operating system and libraries that exist on the system. Normally when building
-trivial progrmas you can run an incantation like =./configure && make && make install= and you're good to go.
+trivial progrmas you can run an incantation like =./configure && make && make install= and you're good to go. Let's see
+if such a script exists in the Emacs repo.
 
 #+caption: Look for the configure script
 #+name: where_configure
@@ -371,28 +377,71 @@ Looks like there isn't a =configure= script for us to run, so we'll have to gene
 generated using a tool called =autoconf= which is part of the GNU Build System, also known as Autotools. The =autoconf=
 tool reads the =configure.ac= file we saw above and uses that to generate the =configure= script we'll ultimately run.
 
-There is a script called =autogen.sh= that does this work for you. Let's run the script, and take a look at the first
-few lines of the output.
+There is a script called =autogen.sh= that drives this process. It also modifies your cloned =.git/config= configuration
+file as well as adding various hooks in =.git/hooks= that are suitable for Emacs development.
+
+Let's run the script, and take a look at the first few lines of the output. We'll run =autogen.sh= with the =autoconf=
+argument to tell it to only generate the =configure= script, and to leave our git configuration untouched.
 
 #+caption: Run the autogen.sh script and show a bit of the output
 #+name: autogen
 #+begin_src bash
-  ./autogen.sh | head -3
+  ./autogen.sh autoconf | head -3
 #+end_src
 
-#+RESULTS[4eb6833f6c77e0afe58ed4310ebc75d21f25d37a]: autogen
+#+RESULTS[84927cdd35282147cb17b7f232466896e0b47b1c]: autogen
 #+begin_example
 Checking whether you have the necessary tools...
 (Read INSTALL.REPO for more details on building Emacs)
 Checking for autoconf (need at least version 2.65) ... missing
 #+end_example
 
-It looks like we're going to need to install =autoconf= before this is going to work for us. This should be easy enough
-to do.
+It looks like we're going to need to install =autoconf= before this is going to work for us.
 
+*NOTE*: When we're installing software in this document, we'll often suppress the output like we do below by redirecting
+STDERR and STDOUT to =/dev/null=. This is because the output is often quite long and irrelevant to the task at hand.
+
+#+caption: Install autoconf and send the output to /dev/null
+#+name: install_autoconf
 #+begin_src bash
-  <<get_prop("install")>> autoconf
+  <<get_prop("install")>> autoconf >/dev/null 2>&1
 #+end_src
+
+#+RESULTS[a8fa3622ef519098920b84ca052a3c03e4e8cf35]: install_autoconf
+
+Now if we run the =autogen.sh= script again it should generate our =configure= script.
+
+#+caption: Second time is a charm!
+#+name: autogen_redux
+#+begin_src bash
+  ./autogen.sh autoconf
+#+end_src
+
+#+RESULTS[3a2e7f1f8060e8db336b965dbdc4b6b96f561a0e]: autogen_redux
+#+begin_example
+Checking whether you have the necessary tools...
+(Read INSTALL.REPO for more details on building Emacs)
+Checking for autoconf (need at least version 2.65) ... ok
+Your system has the required tools.
+Running 'autoreconf -fi -I m4' ...
+You can now run './autogen.sh git'.
+#+end_example
+
+Now if we look for the =./configure= script again, it should be there!
+
+#+caption: Look for the configure script again
+#+name: where_configure_redux
+#+begin_src bash
+  stat --format "%s %n" ./configure
+#+end_src
+
+#+RESULTS[9d47e75f7838fcdaed93775e524b776ac8762b7c]: where_configure_redux
+#+begin_example
+1189578 ./configure
+#+end_example
+
+Wow, that is one huge shell script! When was the last time /you/ wrote a shell script that was
+call_lsplit(where_configure_redux) bytes long?!
 
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
