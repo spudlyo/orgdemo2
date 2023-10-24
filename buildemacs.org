@@ -409,20 +409,17 @@ STDERR and STDOUT to =/dev/null=. This is because the output is often quite long
 
 #+RESULTS[a8fa3622ef519098920b84ca052a3c03e4e8cf35]: install_autoconf
 
-Now if we run the =autogen.sh= script again it should generate our =configure= script.
+Now if we run the =autogen.sh= script again it should generate our =configure= script. This time we'll run it with the
+=--no-check= argument because we've satisfied the autoconf dependency.
 
 #+caption: Second time is a charm!
 #+name: autogen_redux
 #+begin_src bash
-  ./autogen.sh autoconf
+  ./autogen.sh --no-check autoconf
 #+end_src
 
-#+RESULTS[3a2e7f1f8060e8db336b965dbdc4b6b96f561a0e]: autogen_redux
+#+RESULTS[e9357d1355a2c1711fa9956e8a2c51ea486a4d03]: autogen_redux
 #+begin_example
-Checking whether you have the necessary tools...
-(Read INSTALL.REPO for more details on building Emacs)
-Checking for autoconf (need at least version 2.65) ... ok
-Your system has the required tools.
 Running 'autoreconf -fi -I m4' ...
 You can now run './autogen.sh git'.
 #+end_example
