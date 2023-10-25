@@ -952,18 +952,17 @@ compiled and source Elisp code, and documentation like refcards, info files, and
 #+caption: Run ls with the long and human readable size options
 #+name: bin_dir
 #+begin_src bash
-  ls -lh <<tag_dir()>>/bin
+  ls -lh <<tag_dir()>>/bin/*
 #+end_src
 
-#+RESULTS[ca82e786170c1faace53433548a5df820a611e55]: bin_dir
+#+RESULTS[570d0bff0160ec0c3dc4cf090eb721fbca00c573]: bin_dir
 #+begin_example
-total 22M
--rwxr-xr-x 1 mikeh mikeh 447K Oct 25 05:20 ctags
--rwxr-xr-x 1 mikeh mikeh 199K Oct 25 05:20 ebrowse
-lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 emacs -> emacs-29.1.90
--rwxr-xr-x 1 mikeh mikeh  21M Oct 25 05:20 emacs-29.1.90
--rwxr-xr-x 1 mikeh mikeh 230K Oct 25 05:20 emacsclient
--rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 etags
+-rwxr-xr-x 1 mikeh mikeh 447K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/ctags
+-rwxr-xr-x 1 mikeh mikeh 199K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/ebrowse
+lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacs -> emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh  21M Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh 230K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacsclient
+-rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/etags
 #+end_example
 
 Emacs helpfully comes with the main and client Emacs binaries, various programs from generating tags, as well as a
