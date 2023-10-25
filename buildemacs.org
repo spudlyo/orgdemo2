@@ -35,15 +35,33 @@ Org-mode works.
 
 ** Operating System Prerequisites
 This document is intended to be "run" on a GNU/Linux system. It has been tested on both RedHat based systems (Fedora
-release 38 server edition) and Debian based systems (Ubuntu Server 22.04).
+Server 38) and Debian based systems (Ubuntu Server 22.04).
 
 ** Chosing which version of the document to export
+<<doc version>>
 The doccument will will differ slightly depending on which version of the document you chose to export. By default, if
 this document is not altered in any way, you will get the Debian/Ubuntu version of the document. If you wish to export
 the RedHat/Fedora version of the document you will need to:
 
 - Change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian"
 - Change the ":prefix:" property in section [[constants]] to "rh_"
+
+You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
+
+#+caption: Configure this document using Emacs Lisp for RedHat
+#+begin_src elisp :eval never-export :var os="redhat"
+(let* ((redhat-p    (string= os "redhat"))
+       (exclude_tag (if redhat-p "debian" "redhat"))
+       (prefix      (if redhat-p "rh_" "deb_")))
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^#\\+EXCLUDE_TAGS:.*" nil t)
+      (replace-match (concat "#+EXCLUDE_TAGS: noexport " exclude_tag)))
+    (when (re-search-forward "^:prefix:.*" nil t)
+      (replace-match (concat ":prefix: " prefix)))))
+#+end_src
+
+#+RESULTS[68bd323dcc138a1614b613017ea701a1bdb005d8]:
 
 *** Using the 'sudo' command
 Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a
@@ -75,8 +93,8 @@ you've installed Org mode version 9.3 or above. You should be able to export thi
 without installing any additional Emacs packages, it should work with Vanilla Emacs. You also don't need the GUI version
 of Emacs, it should work fine in the Terminal.
 
-On Ubuntu 22.04 you can install Emacs 29.1 by running: =sudo snap install emacs --classic=, on Fedora 38 you can install
-Emacs using =sudo dnf install emacs-nox=. Ideally you should be viewing this document inside GNU Emacs.
+On Ubuntu 22.04 you can install Emacs 27.1 by running: =sudo apt-get install emacs-nox=, on Fedora 38 you can install
+Emacs 28.3 using =sudo dnf install emacs-nox=. Ideally you should be viewing this document inside GNU Emacs.
 
 ** LaTeX Prerequisites
 If you want to export this document to LaTeX or PDF you'll need to install some some additional OS packages.
@@ -165,11 +183,8 @@ Emacs will appear to be locked up during this time.
 :END:
 <<constants>>
 The properties above define all the constants we're using throughout this document. By default, when you
-run this document it will describe how to build GNU Emacs under a Debian based system. In order to build the
-RedHat/Debian version of the document you must:
-
-- Change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian"
-- Change the ":prefix:" property above to "rh_"
+run this document it will describe how to build GNU Emacs under a Debian based system. If you'd like to change this,
+there are instructions on how to do so in the [[doc version]] section.
 
 * Code                                                             :noexport:
 What follows is code that will be used throughout the document.
