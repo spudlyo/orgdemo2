@@ -820,6 +820,161 @@ When I build Emacs 29 I often include newer sexy options like =--with-pgtk=, =--
 =--with-native-compilation= which has been a /killer/ feature since Emacs 28. Each of these options comes with its own
 tradeoffs and required dependencies you'll have to track down and install, so do your homework!
 
+* Building Emacs
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output :dir ~/src/emacs
+:END:
+
+Now that we've successfully configured a minimal version of Emacs, we can now actually build it. At this point it's just
+a matter of running =make && make install= and waiting. That said, there are a few tricks to make things go faster. We
+can provide the =-j= flag to GNU Make to specify the number of jobs (or commands) to run simultaneously, letting us take
+advantage of all the CPU cores we might have sitting idle. The =nproc= command returns the number of CPU processing
+units that are available, and we can use this in conjuction with the =-j= flags to unleash all our processing power on
+this build! If we set the =MAKEFLAGS= environment variable prior to running =make= we can ensure that our flags are
+passed along every time =make= recursively calls itself during the process.
+
+We'll redirect STDOUT and STDERR to =/dev/null= as per usual to avoid the copious output produced by =make=, and
+we'll also echo a message if the whole process completes successfully.
+
+#+caption: Run make using all our available cores
+#+name: make
+#+begin_src bash
+  MAKEFLAGS=-j$(nproc) make > /dev/null 2>&1 && echo Make ran successfully!
+#+end_src
+
+#+RESULTS[d2dac4260eb378d08623336725f8af8d9f02063b]: make
+#+begin_example
+Make ran successfully!
+#+end_example
+
+** Examining the Emacs binary
+Now that we've successfully built the binary, let's find where it lives on the filesystem. To that end we'll use the
+=find= command with the =-type f= predicate to indicate that we just want to find regular files and not directories,
+sockets, or other unusual filesystem objects.
+
+#+caption: Find files named emacs
+#+name: find_emacs
+#+begin_src bash
+  find . -type f -name emacs
+#+end_src
+
+#+RESULTS[17991de67b894279babacfe7e9507d3612210363]: find_emacs
+#+begin_example
+./src/emacs
+#+end_example
+
+That's easy enough, now let's run the =file= tool on it to see what kind of file Linux thinks it is. Also because the
+output can run long, we'll pipe the it into =fmt -w 80= to wrap the output at 100 columns.
+
+#+caption: Run the file command on the Emacs binary and wrap output to 100 characters
+#+name: file_emacs
+#+begin_src bash
+  file <<strip(find_emacs())>> | fmt -w 100
+#+end_src
+
+#+RESULTS[26d95cecc1b48198eb585e3758ceb73a7f436eef]: file_emacs
+#+begin_example
+./src/emacs: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked,
+interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=05dc7274daf385f24942ce75679d81e11de268d3,
+for GNU/Linux 3.2.0, with debug_info, not stripped
+#+end_example
+
+That definitely looks like a binary!
+
+** Evaluate some Emacs Lisp code using the binary
+Now that we've validated that {{{s(find_emacs}}} is actually a binary, let's see if we can get it to evaluate some
+Emacs lisp code! We'll run the binary with the =-batch= and =-eval= options to have Emacs evalulate some code and then
+immediately exit. The code we'll have it evaluate prints the value of the =system-configuration-options= variable to
+STDOUT using the =princ= function, which stands for "print character" and is for human readable output, as opposed to
+output meant to be read by Lisp itself.
+
+#+caption: Run the file command on the Emacs binary and wrap output to 100 characters
+#+name: run_elisp
+#+begin_src bash
+  <<strip(find_emacs())>> -batch -eval '(princ system-configuration-options)'
+#+end_src
+
+#+RESULTS[704062010b1fe50d304a43cfe4cd11709e0f1b6c]: run_elisp
+#+begin_example
+--prefix=/home/mikeh/emacs-29.1.90
+#+end_example
+
+Good news, looks like it's working!
+
+* Installing Emacs
+:PROPERTIES:
+:header-args:       :noweb yes :exports both :cache yes
+:header-args:bash:  :results output :dir ~/src/emacs
+:END:
+
+Now that everything is built, and we've validated we have a working binary, we can now install it! No tricks here, we
+just run =make install= and wait!
+
+#+caption: Install Emacs!
+#+name: make_install
+#+begin_src bash
+  make install >/dev/null 2>&1 && echo Make ran successfully!
+#+end_src
+
+#+RESULTS[d60e33654d849aca2d9152d4e45e8b37175db277]: make_install
+#+begin_example
+Make ran successfully!
+#+end_example
+
+** What did we install?
+
+Let's take a look and see what got installed in our {{{s(tag_dir)}}} directory. We'll use the =du= command to get an
+idea of just how much stuff got installed into our =$HOME= directory. We'll also pipe the output into =sort -rh= to
+reverse sort the lines using the "human numeric sort" so it groks the difference between megabytes and kilobytes.
+
+#+caption: Have du give us a summary of directory sizes in human readable format
+#+name: run_du
+#+begin_src bash
+  du -hs <<tag_dir()>>/* | sort -rh
+#+end_src
+
+#+RESULTS[0174c5134c839087e3da1bc0594e1c2ec49b200c]: run_du
+#+begin_example
+108M	/home/mikeh/emacs-29.1.90/share
+22M	/home/mikeh/emacs-29.1.90/bin
+12M	/home/mikeh/emacs-29.1.90/libexec
+36K	/home/mikeh/emacs-29.1.90/include
+16K	/home/mikeh/emacs-29.1.90/lib
+#+end_example
+
+It looks like the =share= directory is the biggest, clocking in at call_lsplit(run_du)! That directory contains lots of
+ancillary files such as icons, images, text files like the =NEWS= and =JOKES= files, themes, tutorials, a mountain of
+compiled and source Elisp code, and documentation like refcards, info files, and manual pages.
+
+** What's in the bin directory?
+
+#+caption: Run ls with the long and human readable size options
+#+name: bin_dir
+#+begin_src bash
+  ls -lh <<tag_dir()>>/bin    
+#+end_src
+
+#+RESULTS[ca82e786170c1faace53433548a5df820a611e55]: bin_dir
+#+begin_example
+total 22M
+-rwxr-xr-x 1 mikeh mikeh 447K Oct 25 05:20 ctags
+-rwxr-xr-x 1 mikeh mikeh 199K Oct 25 05:20 ebrowse
+lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 emacs -> emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh  21M Oct 25 05:20 emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh 230K Oct 25 05:20 emacsclient
+-rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 etags
+#+end_example
+
+Emacs helpfully comes with the main and client Emacs binaries, various programs from generating tags, as well as a
+program for browsing C++ class hierarchies. I think our work here is done!
+
+* Final Thoughts
+
+I hope you've enjoyed reading this document! Hopefully it's also given you the basics of building Emacs on
+{{{pr(osver)}}} systems and the confidence to explore building your perfect build of GNU Emacs!
+
+
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
 In this section we're going to set up some buffer local variables and run some code. This will allow this literate
