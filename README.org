@@ -1,5 +1,19 @@
 * Literate Documentation with Emacs and Org Mode
 
-In this repository you'll find the source material for a [[https://osem.seagl.org/conferences/seagl2023/program/proposals/952][talk]] I hope to give at SeaGL 2023. This talk will be in
-much in the same sprit as a [[https://osem.seagl.org/conferences/seagl2019/program/proposals/664][talk]] I gave in 2019, but will be updated to include some new tips and techniques that I've
-learned in the intervening years.
+In this repository you'll find the source material for a [[https://osem.seagl.org/conferences/seagl2023/program/proposals/952][talk]] I hope
+to give at SeaGL 2023. This talk will be in much in the same spirit as
+a [[https://osem.seagl.org/conferences/seagl2019/program/proposals/664][talk]] I gave in 2019, but will be updated to include some new tips
+and techniques that I've learned in the intervening years.
+
+The main file in this repository is [[https://gitlab.com/spudlyo/orgdemo2/-/raw/main/buildemacs.org?ref_type=heads][buildemacs.org]], I've linked to the
+raw version of the file in GitLab because it uses some fairly advanced
+Org-mode syntax that doesn't quite render perfectly in the UI.
+
+This file is the the literate document that I'll be discussing at the
+talk. It's a relatively simple guide on how to build GNU Emacs from
+scratch. What makes it interesting is with a few changes the document
+can be configured to give instructions on how to build Emacs on either
+RedHat or Debian based GNU/Linux systems.
+
+Throughout the document I do my best to not hardcode anything in the
+document and make it as dynamic as possible.
