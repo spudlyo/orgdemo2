@@ -564,7 +564,7 @@ specific files.
 #+caption: Install apt-file and update the database
 #+name: install_apt_file
 #+begin_src bash
-  <<get_prop("install")>> apt-file >/dev/null 2>&1
+  sudo apt-get install -qq apt-file >/dev/null 2>&1
   sudo apt-file update >/dev/null 2>&1
 #+end_src
 
