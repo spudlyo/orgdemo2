@@ -22,16 +22,16 @@
 :VISIBILITY: all
 :END:
 This file is a literate Org-mode document. It is intended to be "run" by GNU Emacs 27.1 or higher. This document can
-execute =bash= shell code in order to demonstrate how to create install packages and build Emacs. Out of the
-box however, all exported =bash= code blocks include cached results from a previous run. This means no bash code blocks
-will be executed on your system. If Emacs ever asks you if you want to execute a =bash= source code block, it means
-something is no longer cached and you should be wary of saying "yes" unless you know what you're doing.
+execute =bash= shell code in order to demonstrate how to create install packages and build Emacs. Out of the box,
+however, all exported =bash= code blocks include cached results from a previous run. This means no bash code blocks will
+be executed on your system. If Emacs ever asks you if you want to execute a =bash= source code block, it means something
+is no longer cached and you should be wary of saying "yes" unless you know what you're doing.
 
 This Org-mode document you're currently viewing can be seen as "source code" that produces a document that explains how
 to build Emacs from scratch on both RedHat and Debian based systems. The hope is that this Org-mode source code is
-useful for understanding how to create nice-looking literate Org-mode documents. The resulting document that it produces
-I hope some people might find interesting, but ultimately it's not important for the purposes of understanding how
-Org-mode works.
+useful for understanding how to create nice-looking literate Org-mode documents. I hope some people might enjoy the
+resulting document that it produces, but ultimately it's not important for the purposes of understanding how Org-mode
+works.
 
 ** Operating System Prerequisites
 This document is intended to be "run" on a GNU/Linux system. It has been tested on both RedHat based systems (Fedora
@@ -41,10 +41,10 @@ Server 38) and Debian based systems (Ubuntu Server 22.04).
 <<doc version>>
 The document will will differ slightly depending on which version of the document you chose to export. By default, if
 this document is not altered in any way, you will get the Debian/Ubuntu version of the document. If you wish to export
-the RedHat/Fedora version of the document you will need to:
+the RedHat/Fedora version of the document, you will first need to:
 
-- Change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian"
-- Change the ":prefix:" property in section [[constants]] to "rh_"
+- change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian";
+- change the ":prefix:" property in section [[constants]] to "rh_".
 
 You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
 
@@ -91,10 +91,10 @@ When you edit it, you'll want to change it to look like this:
 This document has been tested on Emacs 27.1, Emacs 28.3, and Emacs 29.1. It may work on earlier versions of Emacs if
 you've installed Org mode version 9.3 or above. You should be able to export this document to Plain Text or PDF formats
 without installing any additional Emacs packages, it should work with Vanilla Emacs. You also don't need the GUI version
-of Emacs, it should work fine in the Terminal.
+of Emacs; it should work fine in the Terminal.
 
-On Ubuntu 22.04 you can install Emacs 27.1 by running: =sudo apt-get install emacs-nox=, on Fedora 38 you can install
-Emacs 28.3 using =sudo dnf install emacs-nox=. Ideally you should be viewing this document inside GNU Emacs.
+On Ubuntu 22.04 you can install Emacs 27.1 by running: =sudo apt install emacs-nox=. On Fedora 38 you can install
+Emacs 28.3 using =sudo dnf install emacs-nox=. Ideally, you will be viewing this document inside GNU Emacs.
 
 ** LaTeX Prerequisites
 If you want to export this document to LaTeX or PDF you'll need to install some some additional OS packages.
@@ -152,8 +152,8 @@ document]] and manually press =C-c C-c= on each code block. This will require yo
 can do by modifying the value of the checksum on the =+RESULTS[checksum]:= block. I like this approach because it gives you
 precise control of when the blocks are executed, and lets you observe each result before moving to the next block.
 
-Alternately can change the default header arg from =:cache yes= to =:cache no= at the top of the document. Once you do
-this, when you export the document it should run all the source code blocks. Annoyingly it will prompt you for
+Alternately, you can change the default header arg from =:cache yes= to =:cache no= at the top of the document. Once you
+do this, when you export the document it should run all the source code blocks. Annoyingly,  it will prompt you for
 confirmation on each =bash= code block. If you'd like to change this, you can hit =C-c C-c= on the block below which
 will cause Org-mode to never confirm the execution of any source block.
 
@@ -163,8 +163,8 @@ will cause Org-mode to never confirm the execution of any source block.
 (setq org-confirm-babel-evaluate nil)
 #+end_src
 
-*NOTE*: Building Emacs can take 10-15 minutes or more on a slow machine. This means Emacs can be spinning its wheels for a
-while during the export process while it cranks through the source blocks in the document. This is not asynchronous, and
+*NOTE*: Building Emacs can take 10-15 minutes or more on a slow machine. This means Emacs can be spinning its wheels for
+a while during the export process, as it cranks through the source blocks in the document. This is not asynchronous, and
 Emacs will appear to be locked up during this time.
 
 * Properties as Constants                                          :noexport:
@@ -256,14 +256,14 @@ iterative process.
 :header-args:       :noweb yes :exports both :cache yes
 :header-args:bash:  :results output :dir ~/src/emacs
 :END:
-In this chapter I'll demonstrate how to download the Emacs source code using =git= and how to set your view of the code to
-a specific tagged release of GNU Emacs.
+In this chapter, I'll demonstrate how to download the Emacs source code using =git= and how to set your view of the code
+to a specific tagged release of GNU Emacs.
 
 ** Installing Development Tools                                      :redhat:
 By default, on the {{{pr(osver)}}} systems I tested on, the =git= program is not installed, so the first thing we'll do
-is install it, and some other development tools, using the =dnf= package manager. Here we provide the =-y= option so
-=dnf= doesn't ask us any questions, and we'll redirect STDOUT and STDERR to =/dev/null= to suppress the copious amount
-of output that =dnf= spits out.
+is install it using the =dnf= package manager, along with some other development tools. Here we provide the =-y= option
+so =dnf= doesn't ask us any questions, and we'll redirect =stdout= and =stderr= to =/dev/null= to suppress the copious
+amount of output that =dnf= spits out.
 
 #+caption: Install the the Development Tools group of packages
 #+name: rh_install_devtools
@@ -288,8 +288,8 @@ live. We'll also change our current working directory to this directory. This he
 
 ** Cloning the Repo
 The next thing we'll want to do is clone the Emacs repository from /Savannah/, the software forge hosted by the Free
-Software Foundation. This will be a full clone, complete with history, branches, and tags. It can take a few minutes to
-complete. We'll provide the =--quiet= to =git= here to tell it not to report its progress to the screen.
+Software Foundation. This will be a full clone, complete with history, branches, and tags, so it can take a few minutes
+to complete. We'll provide the =--quiet= option to =git= to tell it not to report its progress to the screen.
 
 #+caption: Clone the Emacs git repository from Savannah
 #+name: clone_repo
@@ -302,7 +302,7 @@ complete. We'll provide the =--quiet= to =git= here to tell it not to report its
 
 ** Digging into the tags
 <<tags>>
-Now that we've cloned the repository and set our current working directory to =~/src/emacs= let's take a look at some
+Now that we've cloned the repository and set our current working directory to =~/src/emacs=, let's take a look at some
 tags. Emacs uses =git= tags to capture a point in the commit history that marks the release of a specific version. We can
 run =git tag= to list all the available tags.
 
@@ -317,12 +317,12 @@ run =git tag= to list all the available tags.
   183
   #+end_example
 
-Wow {{{s(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
-=git tag= command with the =--list= argument (using the shell wildcard syntax) as well as specifying the =--sort= option
-to sort the tags by when the tag object in the database was created. We'll also specify the =-n= argument to print a
-single line of annotation for the tag.
+Wow, {{{sr(num_tags)}}} tags is a lot! We can narrow it down a bit by listing just the tags for Emacs 29. We'll use the
+=git tag= command with the =--list= argument (using the shell wildcard syntax), as well as specifying the =--sort=
+option, to sort the tags by when the tag object in the database was created. We'll also specify the =-n= argument to
+print a single line of annotation for the tag.
 
-#+caption: List all the tags for Emacs version 29 sorted by date in descending tagged date order
+#+caption: List all the tags for Emacs version 29, sorted by date in descending order
 #+name: sorted_tags
 #+begin_src bash :cache yes
   git tag --list 'emacs-29.*' --sort=-taggerdate -n1
@@ -347,7 +347,7 @@ emacs-29.0.90   Emacs 29.0.90 pretest
     nil))
 #+end_src
 
-You might get a slightly different list when you run the command, but as of this writing, those are all the tagged
+You might get a slightly different list when you run the command, but as of this writing these are all the tagged
 releases of Emacs 29. We'll be working with the version tagged {{{srv(emacs_tag)}}}, as that's the most recent.
 
 ** Creating the branch
@@ -367,8 +367,8 @@ on at the default branch.
 master
 #+end_example
 
-For our purposes, we don't want to build Emacs from the {{{srv(git_branch)}}} branch, instead let's create a branch that
-points to the same commit as the {{{srv(emacs_tag)}}} tag that we identified in section [[tags]].
+For our purposes, we don't want to build Emacs from the {{{srv(git_branch)}}} branch. Instead, let's create a branch
+that points to the same commit as the {{{srv(emacs_tag)}}} tag that we identified in section [[tags]].
 
 #+caption: Create a branch that points to a specific tag
 #+name: create_branch
@@ -381,14 +381,14 @@ points to the same commit as the {{{srv(emacs_tag)}}} tag that we identified in 
 Switched to a new branch 'mybranch'
 #+end_example
 
-We're good to go, we've created our branch at our tagged location and now we can start working on building the program!
+We're good to go! We've created our branch at our tagged location, so now we can start working on building the program.
 
 * Creating the configure script
 If you've ever built an old-school UNIX program from source, you've probably run a =./configure= script. This script
 tests specific details about the environment it's running under in order to inform the build process how it should
 interact with the code in a way that's compatible with the operating system and libraries that exist on the
-system. Normally when building trivial programs you can run an incantation like =./configure && make && make install=
-and you're good to go.
+system. Normally when building trivial programs, you can run a familiar incantation like =./configure && make && make
+install= and you're good to go.
 
 Let's see if we can find a suitable =./configure= script in the Emacs repository.
 
@@ -403,20 +403,21 @@ Let's see if we can find a suitable =./configure= script in the Emacs repository
 configure.ac
 #+end_example
 
-Looks like there isn't a =configure= script for us to run, so we'll have to generate one. The =configure= script is
+Looks like there isn't a =./configure= script for us to run, so we'll have to generate one. The =./configure= script is
 generated using a tool called =autoconf= which is part of the GNU Build System, also known as Autotools. The =autoconf=
-tool reads the =configure.ac= file we saw above and uses that to generate the =configure= script we'll ultimately run.
+tool reads the =./configure.ac= file we saw above and uses that to generate the =./configure= script we'll ultimately
+run.
 
 ** Running the autogen.sh script
 There is a script called =autogen.sh= that drives this process. It also modifies your cloned =.git/config= configuration
-file as well as adding various hooks in =.git/hooks= that are suitable for Emacs development. Let's run the script, and
+file, as well as adding various hooks in =.git/hooks= that are suitable for Emacs development. Let's run the script and
 take a look at the first few lines of the output. We'll run =autogen.sh= with the =autoconf= argument to tell it to only
-generate the =configure= script, and to leave our git configuration untouched.
+generate the =./configure= script, to to leave our git configuration untouched.
 
 #+caption: Run the autogen.sh script and show a bit of the output
 #+name: autogen
 #+begin_src bash
-  ./autogen.sh autoconf | head -3
+  ./autogen.sh autoconf | head -n3
 #+end_src
 
 #+RESULTS[84927cdd35282147cb17b7f232466896e0b47b1c]: autogen
@@ -429,7 +430,7 @@ Checking for autoconf (need at least version 2.65) ... missing
 It looks like we're going to need to install =autoconf= before this is going to work for us.
 
 *NOTE*: When we're installing software in this document, we'll often suppress the output like we do below by redirecting
-STDERR and STDOUT to =/dev/null=. This is because the output is often quite long and irrelevant to the task at hand.
+=stderr= and =stdout= to =/dev/null=. This is because the output is often quite long and irrelevant to the task at hand.
 
 #+caption: Install autoconf and send the output to /dev/null
 #+name: install_autoconf
@@ -439,8 +440,8 @@ STDERR and STDOUT to =/dev/null=. This is because the output is often quite long
 
 #+RESULTS[a8fa3622ef519098920b84ca052a3c03e4e8cf35]: install_autoconf
 
-Now if we run the =autogen.sh= script again it should generate our =configure= script. This time we'll run it with the
-=--no-check= argument because we've satisfied the autoconf dependency.
+Now if we run the =autogen.sh= script again, it should generate our =./configure= script. This time we'll run it with the
+=--no-check= argument, because we've satisfied the autoconf dependency.
 
 #+caption: Second time is a charm!
 #+name: autogen_redux
@@ -455,7 +456,7 @@ Running 'autoreconf -fi -I m4' ...
 You can now run './autogen.sh git'.
 #+end_example
 
-Now if we look for the =./configure= script again, it should be there!
+If if we look for the =./configure= script again, it should be there!
 
 #+caption: Look for the configure script again
 #+name: where_configure_redux
@@ -477,22 +478,22 @@ call_lsplit(where_configure_redux) bytes long?!
 (concat "$HOME/" text)
 #+end_src
 
-In this section we're going to run the =./configure= script to kick off the configuration process. Initially we're not
-going to specify which Emacs features we want to enable or get into any specifics of how it is built. Instead we're
-going to see what it takes to build a minimal version of Emacs and what we get without tweaking the process.
+In this section we're going to run the =./configure= script to kick off the configuration process. We're not going to
+specify which Emacs features we want to enable, or get into any specifics of how it is built. Instead we're going to see
+what it takes to build a minimal version of Emacs.
 
 ** The prefix argument
 One argument we /will/ be providing to the configure script will be the =--prefix= option. This tells the script the
 base directory of where all the files should be installed. By default, when we later run =make install=, there will be a
-number of directories created for both architecture dependent and independent files like binaries, libraries, Emacs Lisp
-code, and documentation. All of of these directories will be created beneath the directory we specify with our
+number of directories created for both architecture-dependent and -independent files like binaries, libraries, Emacs
+Lisp code, and documentation. All of of these directories will be created beneath the directory we specify with our
 =--prefix= argument. We'll use {{{s(tag_dir)}}} as our prefix directory, this way we can potentially build and install
 multiple tagged versions of Emacs without conflict.
 
 ** Installing the build essential meta-package                       :debian:
-Let's run =./configure= and see what happens. We'll provide our =--prefix= argument and we'll also redirect STDERR to
-STDOUT so all the output goes to the same place. Finally we'll take advantage of the =bash= logical OR (=||=)
-short-circuit to echo a message if =configure= returns a non-zero exit code.
+Let's run =./configure= and see what happens. We'll provide our =--prefix= argument, and we'll also redirect =stderr= to
+=stdout= so all the output goes to the same place. Finally we'll take advantage of the =bash= logical OR (=||=)
+short-circuit to echo a message if =./configure= returns a non-zero exit code.
 
 #+caption: Our first attempt at running configure
 #+name: configure_no_make
@@ -524,11 +525,11 @@ helper tool that lets you quickly identify where existing libraries are installe
 #+RESULTS[5710ea359b6016e54699deb1de9754ea07dd6193]: install_build_essential
 
 ** Installing GNU Texinfo
-Let's run =./configure= and see what happens. We'll provide our =--prefix= option and redirect STDERR to STDOUT so all
-the output goes to the same place. Since the =configure= script can output quite a large volume of text to the terminal
-we'll also pipe the output into =tail -5= to just see the last handful of lines. Finally we'll utilize the =bash= array
-variable =PIPESTATUS= (which holds the exit statuses of each command executed in the most recent pipeline) to determine
-if the script invocation failed, and if does fail we'll =echo= our error message.
+Let's run =./configure= and see what happens. We'll provide our =--prefix= option and redirect =stderr= to =stdout= so
+all the output goes to the same place. Since the =./configure= script can output quite a large volume of text to the
+terminal we'll also pipe the output into =tail -n5= to just see the last handful of lines. Finally we'll utilize the
+=bash= array variable =$PIPESTATUS= (which holds the exit statuses of each command executed in the most recent pipeline)
+to determine if the script invocation failed, and if does fail we'll =echo= our error message.
 
 #+caption:
 #+name: configure_no_texinfo
@@ -548,9 +549,9 @@ Configure failed!
 #+end_example
 
 Oops, looks like we don't have the =makeinfo= tool installed. GNU Texinfo is the official documentation format of the
-GNU project, and the Emacs build processes uses =makeinfo= to build the =info= files for the wealth of documentation
-that comes with it. By default on {{{pr(osver)}}} none of the GNU Texinfo tools (like =makeinfo=) are installed, so
-let's install them now.
+GNU project, and the Emacs build process uses =makeinfo= to build the =info= files for the wealth of documentation that
+comes with it. By default on {{{pr(osver)}}}, none of the GNU Texinfo tools (like =makeinfo=) are installed, so let's
+install them now.
 
 #+caption: Install the GNU Texinfo tools
 #+name: install_texinfo
@@ -560,9 +561,10 @@ let's install them now.
 
 #+RESULTS[96772795ca32600810d841be66ccf99b0c5a6a36]: install_texinfo
 <<determine_package_name>>
-Now you might be asking yourself, "How did you know that the =makeinfo= tool is in the =texinfo= package?". That's a good
-question! It's not immediately obvious that =makeinfo= is part of the GNU Texinfo system, and without that key bit of
-information it'd be a real struggle to figure out which package to install to satisfy the missing dependency.
+Now you might be asking yourself, "How did you know that the =makeinfo= tool is in the =texinfo= package?". That's a
+good question! It's not immediately obvious that =makeinfo= is part of the GNU Texinfo system, and without that key bit
+of information it'd be a real struggle to figure out which package to install in order to satisfy the missing
+dependency.
 
 *** Determining the package name for a given a filename              :debian:
 Luckily there's a handy tool called =apt-file= that you can install that searches for packages that contain specific
@@ -576,7 +578,7 @@ filenames.
 #+end_src
 
 #+RESULTS[8bc0f5f65c0314817e5832f02240290e58504a41]: install_apt_file
-Now that it's installed you can see it in action. To cut down on false positives, we're running =apt-file search= with
+Now that it's installed, you can see it in action. To cut down on false positives, we're running =apt-file search= with
 the =--regex= option to use a regular expression to search for files that end in =makeinfo=.
 
 #+caption: Use apt-file to preform a regex search on makeinfo
@@ -591,7 +593,7 @@ libear: /usr/lib/x86_64-linux-gnu/bear/wrapper.d/makeinfo
 texinfo: /usr/bin/makeinfo
 #+end_example
 
-There you have it, =/usr/bin/makeinfo= is very likely the binary we're looking for, and we can see it comes from the
+There you have it: =/usr/bin/makeinfo= is very likely the binary we're looking for, and we can see it comes from the
 =texinfo= package!
 
 *** Determining the package name for a given filename                :redhat:
@@ -613,7 +615,7 @@ Matched from:
 Filename    : /usr/bin/makeinfo
 #+end_example
 
-There you have it, from the  output above you can see the file =/usr/bin/makeinfo= is part of the texinfo package!
+There you have it: from the  output above, you can see the file =/usr/bin/makeinfo= is part of the texinfo package!
 
 ** Installing the GNU TLS Library
 Let's run =./configure= yet again and see what happens! Anticipating more errors, we'll run it much the same way as last
@@ -637,9 +639,9 @@ as options to configure.
 Configure failed!
 #+end_example
 
-Oops, looks like we don't have the GnuTLS library installed. The GnuTLS Transport Layer Security Library is the GNU
-implementation of the SSL and TLS protocols used for secure communication on the Internet. It's how, for example, Emacs
-communicates with package archives like GNU ELPA in a secure manner. As per usual when we hit a snag like this, we'll
+Oops, looks like we don't have the GnuTLS library installed. The GNU Transport Layer Security library is the GNU
+implementation of the SSL and TLS protocols, used for secure communication on the Internet. It's how (for example) Emacs
+communicates with package archives like GNU ELPA in a secure manner. As per usual, when we hit a snag like this, we'll
 install the necessary package to resolve the dependency.
 
 #+caption: Install the the GnuTLS library
@@ -649,15 +651,15 @@ install the necessary package to resolve the dependency.
 #+end_src
 
 #+RESULTS[401e2733259a294b3c15c1f1e49122e558af0356]: install_gnutls
-With libraries it's helpful to know the traditional UNIX conventions of how libraries are named on the filesystem. For
-example if you had a library called =foo=, there would be a file somewhere on the filesystem named =libfoo.so= that is
-the =foo= library in the /shared object/ format, and likely another file named =libfoo.a= which is the same library the
-the /archive/ format. Armed with this knowledge you can use the techniques we discussed in section
-[[determine_package_name]] to determine that the GnuTLS library is part of the {{{p(gnutls)}}} package.
+With libraries, it's helpful to know the traditional UNIX conventions of how they're named. For example, if you had a
+library called =foo=, there would be a file somewhere in the filesystem named =libfoo.so= which is the =foo= library in
+the /shared object/ format, and likely another file named =libfoo.a= which is the same library the the /archive/
+format. Armed with this knowledge, you can use the techniques we discussed in section [[determine_package_name]] to
+determine that the GnuTLS library is part of the {{{p(gnutls)}}} package.
 
 ** Installing the ncurses library
 
-Here we go again with another run of the =configure= program to learn what our next missing dependency is!
+Here we go again: another run of the =configure= program to learn what our next missing dependency is!
 
 #+caption:
 #+name: configure_no_ncurses
@@ -678,10 +680,10 @@ Configure failed!
 #+end_example
 
 Oops, looks like we don't have the =ncurses= library installed. =ncurses= is a terminal control library for Unix-like
-systems that allows you to do fancy terminal tricks required by sophisticated TUI applications like Emacs. The
-original library was named =curses= which is a bit of a pun on the term "cursor", which is something the library lets
-you move around in an terminal independent fashion. Today we'll be installing =ncurses=, which is the "new" version of
-the library. I'm using the term "new" loosely here as =ncurses= was originally released around 30 years ago.
+systems that allows you to do fancy terminal tricks required by sophisticated TUI applications like Emacs. The original
+library was named =curses= which is a bit of a pun on the term "cursor", which is something the library lets you move
+around in an terminal-independent fashion. Today we'll be installing =ncurses=, which is the "new" version of the
+library. We're using the term "new" loosely here,  as =ncurses= was originally released around 30 years ago.
 
 #+caption: Install the the ncurses library
 #+name: install_ncurses
@@ -695,21 +697,21 @@ the library. I'm using the term "new" loosely here as =ncurses= was originally r
 
 I'm confident that we've worked out all the dependency issues, and now we can successfully configure a minimal version
 of Emacs. The question is, how minimal? What features are we getting and what features aren't we getting? Let's change
-our arguments to to =configure= slightly to find out. First we'll change =tail= to a regular expression =grep= command to
-search for to spaces at the start of a line. This helps us filter out much of the noise that the =configure= script
-generates. Towards the end of a successful run of the script, it outputs a section prepended with two spaces that
-provides important details of how Emacs is to be built. It's mostly which libraries are found and used. If certain
-libraries aren't found, then certain features are disabled. For example if X Windows libraries aren't found, then Emacs
-will only run in TUI mode.
+our arguments to to =configure= slightly to find out. First we'll replace =tail= with a regular-expression =grep=
+command to search for two spaces at the start of a line. This helps us filter out much of the noise that the
+=./configure= script generates. Towards the end of a successful run of the script, it outputs a section prepended with
+two spaces that provides important details of how Emacs is to be built. It's mostly which libraries are found and
+used. If certain libraries aren't found, then certain features are disabled. For example, if the X Windows libraries
+aren't found, then Emacs will only run in TUI mode.
 
-We'll also flip the logic with regard to the =PIPESTATUS= array, and we'll print a message on success rather than on
+We'll also flip the logic with regard to the =$PIPESTATUS= array, and we'll print a message on success rather than on
 failure.
 
 #+caption:
 #+name: configure_final
 #+begin_src bash
   ./configure --prefix=<<tag_dir()>> 2>&1 | grep -E '^  '
-  [[ ${PIPESTATUS[0]} -ne 0 ]] || echo Configure succeeded!
+  [[ ${PIPESTATUS[0]} -eq 0 ]] && echo Configure succeeded!
 #+end_src
 
 #+RESULTS[a5ce364fd7fc1652163079f4bde9212ba016fd9c]: configure_final
@@ -770,14 +772,14 @@ failure.
 Configure succeeded!
 #+end_example
 
-As you can see, quite a lot of libraries are not found, and this is indeed going to be a bare bones build of Emacs! The
-process now for the adventurous reader who wants to build a much more feature complete version of Emacs is to research
+As you can see, quite a lot of libraries are not found, and this is indeed going to be a bare-bones build of Emacs! The
+process now, for the adventurous reader who wants to build a much more feature complete version of Emacs, is to research
 and install missing libraries until the list shown above has a lot more lines that end in 'yes'. Part of the fun is
-researching what the various libraries are and how Emacs uses them. For example did you know that =gconf= and =gsettings=
-are two different ways of configuring Gnome applications, and if you install the correct libraries you can build a
-version of Emacs that allows you to make certain configuration changes using /both/ methods? Crazy!
+researching what the various libraries are and how Emacs uses them. For example, did you know that =gconf= and
+=gsettings= are two different ways of configuring Gnome applications, and if you install the correct libraries you can
+build a version of Emacs that allows you to make certain configuration changes using /both/ methods? Crazy!
 
-I'd be remiss if I didn't mention that the =./configure= script has a =--help= option and there are many options that
+I'd be remiss if I didn't mention that the =./configure= script has a =--help= option, and there are many options that
 begin with =--with-<something>= that allow you to explicitly build in certain features. There's a wealth of features and
 options to explore here!  Here's a taste:
 
@@ -823,21 +825,21 @@ options to explore here!  Here's a taste:
   --with-x                use the X Window System
 #+end_example
 
-When I build Emacs 29 I often include newer sexy options like =--with-pgtk=, =--with-tree-sitter=, and of course
+When I build Emacs 29 I often include newer, sexy options like =--with-pgtk=, =--with-tree-sitter=, and of course
 =--with-native-compilation= which has been a /killer/ feature since Emacs 28. Each of these options comes with its own
-trade offs and required dependencies you'll have to track down and install, so do your homework!
+trade-offs and required dependencies you'll have to track down and install, so do your homework!
 
 * Building Emacs
 
-Now that we've successfully configured a minimal version of Emacs, we can now actually build it. At this point it's just
+Now that we've successfully configured a minimal version of Emacs, we can actually build it. At this point, it's just
 a matter of running =make && make install= and waiting. That said, there are a few tricks to make things go faster. We
 can provide the =-j= flag to GNU Make to specify the number of jobs (or commands) to run simultaneously, letting us take
 advantage of all the CPU cores we might have sitting idle. The =nproc= command returns the number of CPU processing
 units that are available, and we can use this in conjunction with the =-j= flags to unleash all our processing power on
-this build! If we set the =MAKEFLAGS= environment variable prior to running =make= we can ensure that our flags are
+this build! If we set the =MAKEFLAGS= environment variable prior to running =make=, we can ensure that our flags are
 passed along every time =make= recursively calls itself during the process.
 
-We'll redirect STDOUT and STDERR to =/dev/null= as per usual to avoid the copious output produced by =make=, and
+We'll redirect =stdout= and =stderr= to =/dev/null= as per usual to avoid the copious output produced by =make=, and
 we'll also echo a message if the whole process completes successfully.
 
 #+caption: Run make using all our available cores
@@ -852,9 +854,9 @@ Make ran successfully!
 #+end_example
 
 ** Examining the Emacs binary
-Now that we've successfully built the binary, let's find where it lives on the filesystem. To that end we'll use the
-=find= command with the =-type f= predicate to indicate that we just want to find regular files and not directories,
-sockets, or other unusual filesystem objects.
+Now that we've successfully built the binary, let's find where it lives on the filesystem. To that end, we'll use the
+=find= command with the =-type f= predicate to indicate that we just want to find regular files (as opposed to
+directories, sockets, or other unusual filesystem objects).
 
 #+caption: Find files named emacs
 #+name: find_emacs
@@ -867,7 +869,7 @@ sockets, or other unusual filesystem objects.
 ./src/emacs
 #+end_example
 
-That's easy enough, now let's run the =file= tool on it to see what kind of file Linux thinks it is. Also because the
+That's easy enough. Now let's run the =file= tool on it to see what kind of file Linux thinks it is. Also, because the
 output can run long, we'll pipe the it into =fmt -w 80= to wrap the output at 80 columns.
 
 #+caption: Run the file command on the Emacs binary and wrap output to 80 characters
@@ -887,13 +889,13 @@ with debug_info, not stripped
 That definitely looks like a binary!
 
 ** Evaluate some Emacs Lisp code using the binary
-Now that we've validated that {{{s(find_emacs}}} is actually a binary, let's see if we can get it to evaluate some
-Emacs lisp code! We'll run the binary with the =-batch= and =-eval= options to have Emacs evaluate some code and then
+Now that we've validated that {{{s(find_emacs}}} is actually a binary, let's see if we can get it to evaluate some Emacs
+lisp code! We'll run the binary with the =-batch= and =-eval= options to have Emacs evaluate some code and then
 immediately exit. The code we'll have it evaluate prints the value of the =system-configuration-options= variable to
-STDOUT using the =princ= function, which stands for "print character" and is for human readable output, as opposed to
+=stdout= using the =princ= function, which stands for "print characters" and is for human-readable output, as opposed to
 output meant to be read by Lisp itself.
 
-#+caption: Run the file command on the Emacs binary and wrap output to 100 characters
+#+caption: Evaluate some Emacs Lisp code using -batch and -eval
 #+name: run_elisp
 #+begin_src bash
   <<strip(find_emacs())>> -batch -eval '(princ system-configuration-options)'
@@ -908,7 +910,7 @@ Good news, looks like it's working!
 
 * Installing Emacs
 
-Now that everything is built, and we've validated we have a working binary, we can now install it! No tricks here, we
+Now that everything is built, and we've validated we have a working binary, we can now install it! No tricks here; we
 just run =make install= and wait!
 
 #+caption: Install Emacs!
@@ -926,9 +928,9 @@ Make ran successfully!
 
 Let's take a look and see what got installed in our {{{s(tag_dir)}}} directory. We'll use the =du= command to get an
 idea of just how much stuff got installed into our =$HOME= directory. We'll also pipe the output into =sort -rh= to
-reverse sort the lines using the "human numeric sort" so it groks the difference between megabytes and kilobytes.
+reverse sort the lines using the "human numeric sort", so that it groks the difference between megabytes and kilobytes.
 
-#+caption: Have du give us a summary of directory sizes in human readable format
+#+caption: Have du give us a summary of directory sizes in human-readable format
 #+name: run_du
 #+begin_src bash
   du -hs <<tag_dir()>>/* | sort -rh
@@ -944,12 +946,12 @@ reverse sort the lines using the "human numeric sort" so it groks the difference
 #+end_example
 
 It looks like the =share= directory is the biggest, clocking in at call_lsplit(run_du)! That directory contains lots of
-ancillary files such as icons, images, text files like the =NEWS= and =JOKES= files, themes, tutorials, a mountain of
+ancillary files, such as icons, images, text files like the =NEWS= and =JOKES= files, themes, tutorials, a mountain of
 compiled and source Elisp code, and documentation like refcards, info files, and manual pages.
 
 ** What's in the bin directory?
 
-#+caption: Run ls with the long and human readable size options
+#+caption: Run ls with the long and human-readable size options
 #+name: bin_dir
 #+begin_src bash
   ls -lh <<tag_dir()>>/bin/*
@@ -965,34 +967,35 @@ lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacs -
 -rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/etags
 #+end_example
 
-Emacs helpfully comes with the main and client Emacs binaries, various programs from generating tags, as well as a
+Emacs helpfully comes with the main and client Emacs binaries, and various programs from generating tags, as well as a
 program for browsing C++ class hierarchies. I think our work here is done!
+
 
 * Final Thoughts
 
 I hope you've enjoyed reading this document! Hopefully it's also given you the basics of building Emacs on
-{{{pr(osver)}}} systems and the confidence to explore creating your perfect build of GNU Emacs!
+{{{pr(osver)}}} systems, and the confidence to explore creating your perfect build of GNU Emacs!
 
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
-In this section we're going to set up some buffer local variables and run some code. This will allow this literate
+In this section, we're going to set up some buffer local variables and run some code. This will allow this literate
 document to run code on your system. Most of these changes are in service to generating a nice PDF file using LaTeX.
 
 In summary:
 
-- Text should wrap at 120 columns
-- We should be able to run shell and emacs-lisp code blocks
-- Elisp code blocks should be evaluated without confirmation
-- Properties defined in one heading should be inherited by all other headings
-- Executing a source block should always produce a =begin_example= block
-- We should use "xelatex" as the latex compiler
-- We should run the latex to pdf process using 'latexmk' with some specific arguments
-- Hyperlinks should not have janky red boxes around them (colorlinks=true)
-- We need to add the "titletoc" package to the default latex packages list, but before hyperref
-- Source code blocks should be formatted in LaTeX using the "listings" package
-- All source code blocks should have a simple box framing them
-- Execute a elisp source block called "startup", the code heading should remain folded
+- Text should wrap at 120 columns.
+- We should be able to run shell and emacs-lisp code blocks.
+- Elisp code blocks should be evaluated without confirmation.
+- Properties defined in one heading should be inherited by all other headings.
+- Executing a source block should always produce a =begin_example= block.
+- We should use "xelatex" as the latex compiler.
+- We should run the latex to pdf process using "latexmk" with some specific arguments.
+- Hyperlinks should not have janky red boxes around them (colorlinks=true).
+- We need to add the "titletoc" package to the default latex packages list, but before hyperref.
+- Source code blocks should be formatted in LaTeX using the "listings" package.
+- All source code blocks should have a simple box framing them.
+- Execute a elisp source block called "startup": the code heading should remain folded.  
 
 # Local Variables:
 # fill-column: 120
