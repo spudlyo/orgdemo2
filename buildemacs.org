@@ -53,7 +53,7 @@ up =$EDITOR= for you to edit =/etc/sudoers=.
 You should see a section in the file that allows users of a specific group (in this case the =sudo= group) to execute any
 command. On RedHat based GNU/Linux systems the group is called =wheel= rather than =sudo=.
 
-#+CAPTION: Relevant section from /etc/sudoers on Ubuntu
+#+caption: Relevant section from /etc/sudoers on Ubuntu
 #+begin_example
 # Allow members of group sudo to execute any command
 %sudo   ALL=(ALL:ALL) ALL
@@ -61,7 +61,7 @@ command. On RedHat based GNU/Linux systems the group is called =wheel= rather th
 
 When you edit it, you'll want to change it to look like this:
 
-#+CAPTION: Updated section from /etc/sudoers on Ubuntu
+#+caption: Updated section from /etc/sudoers on Ubuntu
 #+begin_example
 # Allow members of group sudo to execute any command
 %sudo   ALL=(ALL) NOPASSWD: ALL
@@ -465,7 +465,7 @@ call_lsplit(where_configure_redux) bytes long?!
 :header-args:bash:  :results output :dir ~/src/emacs
 :END:
 
-#+name: tag_dir 
+#+name: tag_dir
 #+begin_src elisp :results value :exports none :var text=emacs_tag :cache yes
 (concat "$HOME/" text)
 #+end_src
@@ -496,7 +496,7 @@ short-circuit to echo a message if =configure= returns a non-zero exit code.
 #+RESULTS[89c7b86937fc395d7e266087ed1a997523114667]: configure_no_make
 #+begin_example
 checking for xcrun... no
-checking for GNU Make... 
+checking for GNU Make...
 configure: error: Building Emacs requires GNU Make, at least version 3.81.
 If you have it installed under another name, configure with 'MAKE=...'.
 For example, run './configure MAKE=gnu-make'.
@@ -523,7 +523,7 @@ we'll also pipe the output into =tail -5= to just see the last handful of lines.
 variable =PIPESTATUS= (which holds the exit statuses of each command executed in the most recent pipeline) to determine
 if the script invocation failed, and if does fail we'll =echo= our error message.
 
-#+caption: 
+#+caption:
 #+name: configure_no_texinfo
 #+begin_src bash
   ./configure --prefix=<<tag_dir()>> 2>&1 | tail -5
@@ -536,7 +536,7 @@ checking for 'find' args to delete a file... -delete
 checking for brew... no
 configure: error: You do not seem to have makeinfo >= 4.13, and your
 source tree does not seem to have pre-built manuals in the 'info' directory.
-Please install a suitable version of makeinfo. 
+Please install a suitable version of makeinfo.
 Configure failed!
 #+end_example
 
@@ -612,7 +612,7 @@ There you have it, from the  output above you can see the file =/usr/bin/makeinf
 Let's run =./configure= yet again and see what happens! Anticipating more errors, we'll run it much the same way as last
 time.
 
-#+caption: 
+#+caption:
 #+name: configure_no_gnutls
 #+begin_src bash
   ./configure --prefix=<<tag_dir()>> 2>&1 | tail -6
@@ -652,7 +652,7 @@ the /archive/ format. Armed with this knowledge you can use the techniques we di
 
 Here we go again with another run of the =configure= program to learn what our next missing dependency is!
 
-#+caption: 
+#+caption:
 #+name: configure_no_ncurses
 #+begin_src bash
   ./configure --prefix=<<tag_dir()>> 2>&1 | tail -6
@@ -671,7 +671,7 @@ Configure failed!
 #+end_example
 
 Oops, looks like we don't have the =ncurses= library installed. =ncurses= is a terminal control library for Unix-like
-systems that allows you to do fancy terminal tricks necessary for sophisticated TUI applications like Emacs. The
+systems that allows you to do fancy terminal tricks required by sophisticated TUI applications like Emacs. The
 original library was named =curses= which is a bit of a pun on the term "cursor", which is something the library lets
 you move around in an terminal independent fashion. Today we'll be installing =ncurses=, which is the "new" version of
 the library. I'm using the term "new" loosely here as =ncurses= was originally released around 30 years ago.
@@ -682,6 +682,143 @@ the library. I'm using the term "new" loosely here as =ncurses= was originally r
   <<get_prop("install")>> <<get_prop("ncurses")>> >/dev/null 2>&1
 #+end_src
 
+#+RESULTS[c681859aa57a97d538d22dfbc05c1c446e66513e]: install_ncurses
+
+** Finally, a minimal configuration
+
+I'm confident that we've worked out all the dependency issues, and now we can successfully configure a minimal version
+of Emacs. The question is, how minimal? What features are we getting and what features aren't we getting? Let's change
+our arguments to to =configure= slightly to find out. First we'll change =tail= to a regular expression =grep= command to
+search for to spaces at the start of a line. This helps us filter out much of the noise that the =configure= script
+generates. Towards the end of a successful run of the script, it outputs a section prepended with two spaces that
+provides important details of how Emacs is to be built. It's mostly which libraries are found and used. If certain
+libraries aren't found, then certain features are disabled. For example if X Windows libraries aren't found, then Emacs
+will only run in TUI mode.
+
+We'll also flip the logic with regard to the =PIPESTATUS= array, and we'll print a message on success rather than on
+failure.
+
+#+caption:
+#+name: configure_final
+#+begin_src bash
+  ./configure --prefix=<<tag_dir()>> 2>&1 | grep -E '^  '
+  [[ ${PIPESTATUS[0]} -ne 0 ]] || echo Configure succeeded!
+#+end_src
+
+#+RESULTS[a5ce364fd7fc1652163079f4bde9212ba016fd9c]: configure_final
+#+begin_example
+  Where should the build process find the source code?    .
+  What compiler should emacs be built with?               gcc -g3 -O2
+  Should Emacs use the GNU version of malloc?             no
+    (The GNU allocators don't work with this system configuration.)
+  Should Emacs use a relocating allocator for buffers?    no
+  Should Emacs use mmap(2) for buffer allocation?         no
+  What window system should Emacs use?                    none
+  What toolkit should Emacs use?                          none
+  Where do we find X Windows header files?                NONE
+  Where do we find X Windows libraries?                   NONE
+  Does Emacs use -lXaw3d?                                 no
+  Does Emacs use -lXpm?                                   no
+  Does Emacs use -ljpeg?                                  no
+  Does Emacs use -ltiff?                                  no
+  Does Emacs use a gif library?                           no
+  Does Emacs use a png library?                           no
+  Does Emacs use -lrsvg-2?                                no
+  Does Emacs use -lwebp?                                  no
+  Does Emacs use -lsqlite3?                               no
+  Does Emacs use cairo?                                   no
+  Does Emacs use -llcms2?                                 no
+  Does Emacs use imagemagick?                             no
+  Does Emacs use native APIs for images?                  no
+  Does Emacs support sound?                               yes
+  Does Emacs use -lgpm?                                   no
+  Does Emacs use -ldbus?                                  no
+  Does Emacs use -lgconf?                                 no
+  Does Emacs use GSettings?                               no
+  Does Emacs use a file notification library?             yes -lglibc (inotify)
+  Does Emacs use access control lists?                    no
+  Does Emacs use -lselinux?                               no
+  Does Emacs use -lgnutls?                                yes
+  Does Emacs use -lxml2?                                  no
+  Does Emacs use -lfreetype?                              no
+  Does Emacs use HarfBuzz?                                no
+  Does Emacs use -lm17n-flt?                              no
+  Does Emacs use -lotf?                                   no
+  Does Emacs use -lxft?                                   no
+  Does Emacs use -lsystemd?                               no
+  Does Emacs use -ljansson?                               no
+  Does Emacs use -ltree-sitter?                           no
+  Does Emacs use the GMP library?                         yes
+  Does Emacs directly use zlib?                           no
+  Does Emacs have dynamic modules support?                yes
+  Does Emacs use toolkit scroll bars?                     no
+  Does Emacs support Xwidgets?                            no
+  Does Emacs have threading support in lisp?              yes
+  Does Emacs support the portable dumper?                 yes
+  Does Emacs support legacy unexec dumping?               no
+  Which dumping strategy does Emacs use?                  pdumper
+  Does Emacs have native lisp compiler?                   no
+  Does Emacs use version 2 of the X Input Extension?      no
+  Does Emacs generate a smaller-size Japanese dictionary? no
+Configure succeeded!
+#+end_example
+
+As you can see, quite a lot of libraries are not found, and this is indeed going to be a barebones build of Emacs! The
+process now for the adventurous reader who wants to build a much more feature complete version of Emacs is to research
+and install missing libraries until the list shown above has a lot more lines that end in 'yes'. Part of the fun is
+researching what the various libaries are and how Emacs uses them. For example did you know that =gconf= and =gsettings=
+are two different ways of configuring Gnome applications, and if you install the correct libraries you can build a
+version of Emacs that allows you to make certain configuration changes using /both/ methods? Crazy!
+
+I'd be remiss if I didn't mention that the =./configure= script has a =--help= option and there are many options that
+begin with =--with-<something>= that allow you to explicitly build in certain features. There's a wealth of features and
+options to explore here!  Here's a taste:
+
+#+caption: Run configure with the help option and only display the --with-x options
+#+name: configure_help
+#+begin_src bash
+  ./configure --help | grep -E '^  --with-'
+#+end_src
+
+#+RESULTS[78d8975af5b1234bd313f8287264e31598cce0ba]: configure_help
+#+begin_example
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --with-mailutils        rely on GNU Mailutils, so that the --without-pop
+  --with-pop              Support POP mail retrieval if Emacs movemail is used
+  --with-kerberos         support Kerberos-authenticated POP
+  --with-kerberos5        support Kerberos version 5 authenticated POP
+  --with-hesiod           support Hesiod to get the POP server host
+  --with-mail-unlink      unlink, rather than empty, mail spool after reading
+  --with-mailhost=HOSTNAME
+  --with-sound=VALUE      compile with sound support (VALUE one of: yes, alsa,
+  --with-pdumper=VALUE    enable pdumper support unconditionally ('yes', 'no',
+  --with-unexec=VALUE     enable unexec support unconditionally ('yes', 'no',
+  --with-dumping=VALUE    kind of dumping to use for initial Emacs build
+  --with-x-toolkit=KIT    use an X toolkit (KIT one of: yes or gtk, gtk2,
+  --with-wide-int         prefer wide Emacs integers (typically 62-bit); on
+  --with-cairo-xcb        use XCB surfaces for Cairo support
+  --with-imagemagick      compile with ImageMagick image support
+  --with-json             compile with native JSON support
+  --with-tree-sitter      compile with tree-sitter
+  --with-ns               use Nextstep (macOS Cocoa or GNUstep) windowing
+  --with-w32              use native MS Windows GUI in a Cygwin build
+  --with-pgtk             use GTK to support window systems other than X
+  --with-gconf            compile with Gconf support (Gsettings replaces this)
+  --with-cygwin32-native-compilation
+  --with-small-ja-dic     generate a smaller-size Japanese dictionary
+  --with-file-notification=LIB
+  --with-xwidgets         enable use of xwidgets in Emacs buffers (requires
+  --with-be-app           enable use of Haiku's Application Kit as a window
+  --with-be-cairo         enable use of cairo under Haiku's Application Kit
+  --with-gameuser=USER_OR_GROUP
+  --with-gnustep-conf=FILENAME
+  --with-native-compilation[=TYPE]
+  --with-x                use the X Window System
+#+end_example
+
+When I build Emacs 29 I often include newer sexy options like =--with-pgtk=, =--with-tree-sitter=, and of course
+=--with-native-compilation= which has been a /killer/ feature since Emacs 28. Each of these options comes with its own
+tradeoffs and required dependencies you'll have to track down and install, so do your homework!
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
