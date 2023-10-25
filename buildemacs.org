@@ -156,6 +156,10 @@ Emacs will appear to be locked up during this time.
 :rh_osver: Fedora Server 38
 :rh_install: sudo dnf install -y
 :deb_install: sudo apt-get install -qq
+:deb_gnutls: libgnutls28-dev
+:rh_gnutls: gnutls-devel
+:deb_ncurses: libncurses-dev
+:rh_ncurses: ncurses-devel
 :END:
 <<constants>>
 The properties above define all the constants we're using throughout this document. By default, when you
@@ -225,6 +229,10 @@ Emacs. The goal is to walk through each step of the process, and explain things 
 not have the necessary software components installed that are required to build GNU Emacs from source, so we'll also be
 installing a lot of software on your computer. You'll need =sudo= access for this, and this document assumes that your
 local user can run =sudo= without a password.
+
+Much of this document is going to involve trying to run the Emacs =./configure= script, having something fail, resolving
+some missing software dependency, and then trying again until we finally have a successful build. It's a bit of an
+iterative process.
 
 * Obtaining the Source Code
 :PROPERTIES:
@@ -496,12 +504,13 @@ Configure failed!
 
 Oops, looks like we don't have GNU Make installed. By default on {{{pr(osver)}}} there aren't any development or build
 tools installed. We can solve this problem by installing the =build-essential= meta-package, which installs a C/C++
-compiler, GNU Make, and some libraries.
+compiler, GNU Make, and some libraries. We'll also take this opportunity to install the =pkg-config= utility which is a
+helper tool that lets you quickly identify where existing libraries are installed and which compiler flags to use.
 
 #+caption: Install the build-essential meta-package and send the output to /dev/null
 #+name: install_build_essential
 #+begin_src bash
-  <<get_prop("install")>> build-essential >/dev/null 2>&1
+  <<get_prop("install")>> build-essential pkg-config >/dev/null 2>&1
 #+end_src
 
 #+RESULTS[e32146b70d108be5d1d3e1454bc6c98e526b0c1f]: install_build_essential
@@ -542,6 +551,86 @@ let's install them now.
 #+end_src
 
 #+RESULTS[96772795ca32600810d841be66ccf99b0c5a6a36]: install_texinfo
+
+Now you might be asking yourself, "How do you know that the =makeinfo= tool is in the =texinfo= package?". It might not
+be obvious to you that =makeinfo= is part of the GNU Texinfo system, and if you didn't know that you'd likely struggle
+to figure out the name of the package to install to get the =makeinfo= program that the =configure= script is
+complaining about!
+
+*** Determining the package name :debian:
+Luckily there is a handy tool called =apt-file= that you can install that can help you search packages looking for
+specific files.
+
+#+caption: Install apt-file and update the database
+#+name: install_apt_file
+#+begin_src bash
+  <<get_prop("install")>> apt-file >/dev/null 2>&1
+  sudo apt-file update >/dev/null 2>&1
+#+end_src
+
+#+RESULTS[8bc0f5f65c0314817e5832f02240290e58504a41]: install_apt_file
+Now that it's installed you can see it in action. To cut down on false positives, we're running =apt-file search= with
+the =--regex= option to use a regular expression search for files that end in =makeinfo=.
+
+#+caption: Use apt-file to preform a regex search on makeinfo
+#+name: apt_file_search
+#+begin_src bash
+  apt-file search --regex makeinfo$
+#+end_src
+
+#+RESULTS[63f7fc196e5e1415a1831f69340ae4ff2d3f8250]: apt_file_search
+#+begin_example
+libear: /usr/lib/x86_64-linux-gnu/bear/wrapper.d/makeinfo
+texinfo: /usr/bin/makeinfo
+#+end_example
+
+There you have it, =/usr/bin/makeinfo= is very likely the binary we're looking for, and we can see it comes from the
+=texinfo= package!
+
+*** Determining the package name :redhat:
+The =dnf= tool has a =provides= subcommand that you can use to determine which package a given file exists in. We can
+use this to determine which package that the =makeinfo= command is in.
+
+#+begin_src bash
+  dnf provides makeinfo
+#+end_src
+
+** Installing the GNU TLS Library
+Let's run =./configure= yet again and see what happens! Anticipating more errors, we'll run it much the same way as last
+time.
+
+#+caption: 
+#+name: configure_no_gnutls
+#+begin_src bash
+  ./configure --prefix=<<tag_dir()>> 2>&1 | tail -6
+  [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+#+end_src
+
+#+RESULTS[aa8fc505a78fd8220e5292a49a112eac9bb3cd63]: configure_no_gnutls
+#+begin_example
+configure: error: The following required libraries were not found:
+     gnutls
+Maybe some development libraries/packages are missing?
+To build anyway, give:
+     --with-gnutls=ifavailable
+as options to configure.
+Configure failed!
+#+end_example
+
+Oops, looks like we don't have the GnuTLS library installed. The GnuTLS Transport Layer Security Library is the GNU
+implementation of the SSL and TLS protocols used for secure communication on the Internet. It's how, for example, Emacs
+communicates with package archives like GNU ELPA in a secure manner. As per usual when we hit a snag like this, we'll
+install the necessary package to resolve the dependency.
+
+#+caption: Install the the GnuTLS library
+#+name: install_gnutls
+#+begin_src bash
+  <<get_prop("install")>> <<get_prop("gnutls")>> >/dev/null 2>&1
+#+end_src
+
+#+RESULTS[401e2733259a294b3c15c1f1e49122e558af0356]: install_gnutls
+
+** Installing the ncurses library
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
