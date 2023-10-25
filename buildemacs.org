@@ -868,19 +868,20 @@ sockets, or other unusual filesystem objects.
 #+end_example
 
 That's easy enough, now let's run the =file= tool on it to see what kind of file Linux thinks it is. Also because the
-output can run long, we'll pipe the it into =fmt -w 80= to wrap the output at 100 columns.
+output can run long, we'll pipe the it into =fmt -w 80= to wrap the output at 80 columns.
 
-#+caption: Run the file command on the Emacs binary and wrap output to 100 characters
+#+caption: Run the file command on the Emacs binary and wrap output to 80 characters
 #+name: file_emacs
 #+begin_src bash
-  file <<strip(find_emacs())>> | fmt -w 100
+  file <<strip(find_emacs())>> | fmt -w 80
 #+end_src
 
-#+RESULTS[26d95cecc1b48198eb585e3758ceb73a7f436eef]: file_emacs
+#+RESULTS[e9ac48e91dc6d66b022591ea76afb0ab4c4ca878]: file_emacs
 #+begin_example
-./src/emacs: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked,
-interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=05dc7274daf385f24942ce75679d81e11de268d3,
-for GNU/Linux 3.2.0, with debug_info, not stripped
+./src/emacs: ELF 64-bit LSB pie executable, x86-64, version 1
+(SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2,
+BuildID[sha1]=05dc7274daf385f24942ce75679d81e11de268d3, for GNU/Linux 3.2.0,
+with debug_info, not stripped
 #+end_example
 
 That definitely looks like a binary!
