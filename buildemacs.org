@@ -37,9 +37,9 @@ Org-mode works.
 This document is intended to be "run" on a GNU/Linux system. It has been tested on both RedHat based systems (Fedora
 Server 38) and Debian based systems (Ubuntu Server 22.04).
 
-** Chosing which version of the document to export
+** Choosing which version of the document to export
 <<doc version>>
-The doccument will will differ slightly depending on which version of the document you chose to export. By default, if
+The document will will differ slightly depending on which version of the document you chose to export. By default, if
 this document is not altered in any way, you will get the Debian/Ubuntu version of the document. If you wish to export
 the RedHat/Fedora version of the document you will need to:
 
@@ -484,7 +484,7 @@ going to see what it takes to build a minimal version of Emacs and what we get w
 ** The prefix argument
 One argument we /will/ be providing to the configure script will be the =--prefix= option. This tells the script the
 base directory of where all the files should be installed. By default, when we later run =make install=, there will be a
-number of directories created for both architecture dependent and indepent files like binaries, libaries, Emacs Lisp
+number of directories created for both architecture dependent and indepent files like binaries, libraries, Emacs Lisp
 code, and documentation. All of of these directories will be created beneath the directory we specify with our
 =--prefix= argument. We'll use {{{s(tag_dir)}}} as our prefix directory, this way we can potentially build and
 install multiple tagged versions of Emacs without conflict.
@@ -595,7 +595,7 @@ There you have it, =/usr/bin/makeinfo= is very likely the binary we're looking f
 =texinfo= package!
 
 *** Determining the package name for a given filename                :redhat:
-Luckily the =dnf= tool has a =provides= subcommand that you can use to determine which package a given file exists
+Luckily the =dnf= tool has a =provides= sub-command that you can use to determine which package a given file exists
 in. We can use this to determine which package that the =makeinfo= command is in.
 
 #+caption: Use "dnf provides" to find the package containing makeinfo
@@ -770,10 +770,10 @@ failure.
 Configure succeeded!
 #+end_example
 
-As you can see, quite a lot of libraries are not found, and this is indeed going to be a barebones build of Emacs! The
+As you can see, quite a lot of libraries are not found, and this is indeed going to be a bare bones build of Emacs! The
 process now for the adventurous reader who wants to build a much more feature complete version of Emacs is to research
 and install missing libraries until the list shown above has a lot more lines that end in 'yes'. Part of the fun is
-researching what the various libaries are and how Emacs uses them. For example did you know that =gconf= and =gsettings=
+researching what the various libraries are and how Emacs uses them. For example did you know that =gconf= and =gsettings=
 are two different ways of configuring Gnome applications, and if you install the correct libraries you can build a
 version of Emacs that allows you to make certain configuration changes using /both/ methods? Crazy!
 
@@ -825,7 +825,7 @@ options to explore here!  Here's a taste:
 
 When I build Emacs 29 I often include newer sexy options like =--with-pgtk=, =--with-tree-sitter=, and of course
 =--with-native-compilation= which has been a /killer/ feature since Emacs 28. Each of these options comes with its own
-tradeoffs and required dependencies you'll have to track down and install, so do your homework!
+trade offs and required dependencies you'll have to track down and install, so do your homework!
 
 * Building Emacs
 
@@ -833,7 +833,7 @@ Now that we've successfully configured a minimal version of Emacs, we can now ac
 a matter of running =make && make install= and waiting. That said, there are a few tricks to make things go faster. We
 can provide the =-j= flag to GNU Make to specify the number of jobs (or commands) to run simultaneously, letting us take
 advantage of all the CPU cores we might have sitting idle. The =nproc= command returns the number of CPU processing
-units that are available, and we can use this in conjuction with the =-j= flags to unleash all our processing power on
+units that are available, and we can use this in conjunction with the =-j= flags to unleash all our processing power on
 this build! If we set the =MAKEFLAGS= environment variable prior to running =make= we can ensure that our flags are
 passed along every time =make= recursively calls itself during the process.
 
@@ -887,7 +887,7 @@ That definitely looks like a binary!
 
 ** Evaluate some Emacs Lisp code using the binary
 Now that we've validated that {{{s(find_emacs}}} is actually a binary, let's see if we can get it to evaluate some
-Emacs lisp code! We'll run the binary with the =-batch= and =-eval= options to have Emacs evalulate some code and then
+Emacs lisp code! We'll run the binary with the =-batch= and =-eval= options to have Emacs evaluate some code and then
 immediately exit. The code we'll have it evaluate prints the value of the =system-configuration-options= variable to
 STDOUT using the =princ= function, which stands for "print character" and is for human readable output, as opposed to
 output meant to be read by Lisp itself.
@@ -951,7 +951,7 @@ compiled and source Elisp code, and documentation like refcards, info files, and
 #+caption: Run ls with the long and human readable size options
 #+name: bin_dir
 #+begin_src bash
-  ls -lh <<tag_dir()>>/bin    
+  ls -lh <<tag_dir()>>/bin
 #+end_src
 
 #+RESULTS[ca82e786170c1faace53433548a5df820a611e55]: bin_dir
