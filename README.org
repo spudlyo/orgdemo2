@@ -15,5 +15,6 @@ scratch. What makes it interesting is with a few changes the document
 can be configured to give instructions on how to build Emacs on either
 RedHat or Debian based GNU/Linux systems.
 
-Throughout the document I do my best to not hardcode anything in the
-document and make it as dynamic as possible.
+Throughout the document I do my best to not hardcode anything that
+appears in the output if any org-babel code blocks and try to keep
+everything as dynamic as possible.
