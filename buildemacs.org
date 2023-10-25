@@ -484,10 +484,10 @@ going to see what it takes to build a minimal version of Emacs and what we get w
 ** The prefix argument
 One argument we /will/ be providing to the configure script will be the =--prefix= option. This tells the script the
 base directory of where all the files should be installed. By default, when we later run =make install=, there will be a
-number of directories created for both architecture dependent and indepent files like binaries, libraries, Emacs Lisp
+number of directories created for both architecture dependent and independent files like binaries, libraries, Emacs Lisp
 code, and documentation. All of of these directories will be created beneath the directory we specify with our
-=--prefix= argument. We'll use {{{s(tag_dir)}}} as our prefix directory, this way we can potentially build and
-install multiple tagged versions of Emacs without conflict.
+=--prefix= argument. We'll use {{{s(tag_dir)}}} as our prefix directory, this way we can potentially build and install
+multiple tagged versions of Emacs without conflict.
 
 ** Installing the build essential meta-package                       :debian:
 Let's run =./configure= and see what happens. We'll provide our =--prefix= argument and we'll also redirect STDERR to
