@@ -974,7 +974,7 @@ file using LaTeX.
 
 In summary:
 
-- Text should wrap at 120 columns.
+- Text should wrap at 100 columns.
 - We should be able to run shell and emacs-lisp code blocks.
 - Elisp code blocks should be evaluated without confirmation.
 - Properties defined in one heading should be inherited by all other headings.
@@ -988,7 +988,7 @@ In summary:
 - Execute an Elisp source block called "startup": the buffer should remain unmodified, and code heading folded.
 
 # Local Variables:
-# fill-column: 120
+# fill-column: 100
 # eval: (org-babel-do-load-languages 'org-babel-load-languages '((shell . t) (emacs-lisp . t)))
 # org-confirm-babel-evaluate: (lambda (lang body) (not (or (string= lang "elisp") (string= lang "emacs-lisp"))))
 # org-use-property-inheritance: t
