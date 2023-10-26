@@ -450,7 +450,7 @@ Running 'autoreconf -fi -I m4' ...
 You can now run './autogen.sh git'.
 #+end_example
 
-If if we look for the =./configure= script again, it should be there!
+If we look for the =./configure= script again, it should be there!
 
 #+caption: Look for the configure script again
 #+name: where_configure_redux
@@ -464,7 +464,7 @@ If if we look for the =./configure= script again, it should be there!
 #+end_example
 
 Wow, that is one huge shell script! When was the last time /you/ wrote a shell script that was
-call_lsplit(where_configure_redux) bytes long?!
+call_lsplit[:results raw](where_configure_redux) bytes long?!
 
 * Configuring the build process
 #+name: tag_dir
@@ -939,9 +939,9 @@ reverse sort the lines using the "human numeric sort", so that it groks the diff
 16K	/home/mikeh/emacs-29.1.90/lib
 #+end_example
 
-It looks like the =share= directory is the biggest, clocking in at call_lsplit(run_du)! That directory contains lots of
-ancillary files, such as icons, images, text files like the =NEWS= and =JOKES= files, themes, tutorials, a mountain of
-compiled and source Elisp code, and documentation like refcards, info files, and manual pages.
+It looks like the =share= directory is the biggest, clocking in at call_lsplit[:results raw](run_du)! That directory
+contains lots of ancillary files, such as icons, images, text files like the =NEWS= and =JOKES= files, themes,
+tutorials, a mountain of compiled and source Elisp code, and documentation like refcards, info files, and manual pages.
 
 ** What's in the bin directory?
 
