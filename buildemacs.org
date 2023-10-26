@@ -52,7 +52,7 @@ You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
 
 # #+SUBTITLE: A guide for Debian based GNU/Linux systems
 #+caption: Configure this document using Emacs Lisp for RedHat
-#+begin_src elisp :eval never-export :var os="Debian"
+#+begin_src elisp :results none :eval never-export :var os="RedHat"
 (let* ((redhat-p    (string= os "RedHat"))
        (exclude_tag (if redhat-p "debian" "redhat"))
        (prefix      (if redhat-p "rh_" "deb_")))
@@ -127,7 +127,7 @@ space available.
 
 #+caption: Install LaTeX Prerequisites on Debian based systems
 #+name: deb_install_latex
-#+begin_src bash :eval never-export :results output replace :dir ~/
+#+begin_src bash :results none :eval never-export :dir ~/
   sudo apt-get install -qq \
        texlive-latex-extra \
        texlive-extra-utils \
@@ -135,12 +135,12 @@ space available.
        latexmk \
        inkscape \
        fonts-jetbrains-mono \
-       fonts-inter > /dev/null 2>&1 && echo Success!
+       fonts-inter > /dev/null 2>&1 || echo Failed!
 #+end_src
 
 #+caption: Install LaTeX Prerequisites on RedHat based systems
 #+name: rh_install_latex
-#+begin_src bash :eval never-export :results output replace :dir ~/
+#+begin_src bash :results none :eval never-export :results output replace :dir ~/
   sudo dnf install -y \
        texlive-latex \
        texlive-xetex \
@@ -153,7 +153,7 @@ space available.
        latexmk \
        inkscape \
        jetbrains-mono-fonts \
-       rsms-inter-fonts > /dev/null 2>&1 && echo Success!
+       rsms-inter-fonts > /dev/null 2>&1 || echo Failed!
 #+end_src
 
 ** Executing the code found in this document
@@ -171,7 +171,7 @@ execution of any source block.
 
 # You know what you're doing, right? Right!?
 #+name: no_babel_confirm
-#+begin_src elisp :eval never-export
+#+begin_src elisp :results none :eval never-export
 (setq org-confirm-babel-evaluate nil)
 #+end_src
 
@@ -230,7 +230,7 @@ you're not using a custom Emacs theme I load the wonderful =leuven= theme which 
 makes Org documents look amazing. Sorry, not sorry.
 
 #+NAME: startup
-#+begin_src emacs-lisp :eval never-export :cache no :exports none
+#+begin_src emacs-lisp :results none :eval never-export :cache no :exports none
 (require 'ox)
 
 (if (null custom-enabled-themes)
@@ -251,9 +251,6 @@ makes Org documents look amazing. Sorry, not sorry.
 (add-to-list 'org-export-filter-example-block-functions
              'my-latex-export-example-blocks)
 #+end_src
-
-#+RESULTS: startup
-| my-latex-export-example-blocks |
 
 * Introduction
 In this document we're going to demonstrate how you, {{{pr(user)}}}, can download and build the
@@ -1021,7 +1018,6 @@ In summary:
 - Source code blocks should be formatted in LaTeX using the "listings" package.
 - All source code blocks should have a simple box framing them.
 - Execute the Elisp source block "startup":
-- Ensure the buffer should remains unmodified
 - The heading the "startup" source block is in should remain folded.
 - When running the latex to pdf process, allow for dynamic TEX content via shell escape.
 
@@ -1052,7 +1048,6 @@ In summary:
 # eval: (progn
 #         (org-babel-goto-named-src-block "startup")
 #         (org-babel-execute-src-block)
-#         (set-buffer-modified-p nil)
 #         (outline-hide-subtree)
 #         (setq org-latex-pdf-process `(,(concat (car org-latex-pdf-process) " -8bit -shell-escape"))))
 # End:
