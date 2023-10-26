@@ -118,7 +118,7 @@ asynchronously. This is around 1.5GB of packages, so make sure you have the spac
 #+caption: Install LaTeX Prerequisites on Debian based systems
 #+name: deb_install_latex
 #+begin_src bash :eval never-export :results output replace :dir ~/
-  sudo apt install -qq \
+  sudo apt-get install -qq \
        texlive-latex-extra \
        texlive-extra-utils \
        texlive-xetex \
@@ -175,7 +175,7 @@ Emacs will appear to be locked up during this time.
 :deb_osver: Ubuntu Server 22.04
 :rh_osver: Fedora Server 38
 :rh_install: sudo dnf install -y
-:deb_install: sudo apt install -qq
+:deb_install: sudo apt-get install -qq
 :deb_gnutls: libgnutls28-dev
 :rh_gnutls: gnutls-devel
 :deb_ncurses: libncurses-dev
@@ -420,7 +420,7 @@ generate the =./configure= script, to to leave our git configuration untouched.
   ./autogen.sh autoconf | head -n3
 #+end_src
 
-#+RESULTS[84927cdd35282147cb17b7f232466896e0b47b1c]: autogen
+#+RESULTS[32d8dc5d0ad6bf23e070bc6beea8cd130026f7e5]: autogen
 #+begin_example
 Checking whether you have the necessary tools...
 (Read INSTALL.REPO for more details on building Emacs)
@@ -519,7 +519,7 @@ helper tool that lets you quickly identify where existing libraries are installe
 #+caption: Install the build-essential meta-package and send the output to /dev/null
 #+name: install_build_essential
 #+begin_src bash
-  sudo apt install -qq build-essential pkg-config >/dev/null 2>&1
+  sudo apt-get install -qq build-essential pkg-config >/dev/null 2>&1
 #+end_src
 
 #+RESULTS[5710ea359b6016e54699deb1de9754ea07dd6193]: install_build_essential
@@ -573,7 +573,7 @@ filenames.
 #+caption: Install apt-file and update its database
 #+name: install_apt_file
 #+begin_src bash
-  sudo apt install -qq apt-file >/dev/null 2>&1
+  sudo apt-get install -qq apt-file >/dev/null 2>&1
   sudo apt-file update >/dev/null 2>&1
 #+end_src
 
@@ -651,6 +651,7 @@ install the necessary package to resolve the dependency.
 #+end_src
 
 #+RESULTS[401e2733259a294b3c15c1f1e49122e558af0356]: install_gnutls
+
 With libraries, it's helpful to know the traditional UNIX conventions of how they're named. For example, if you had a
 library called =foo=, there would be a file somewhere in the filesystem named =libfoo.so= which is the =foo= library in
 the /shared object/ format, and likely another file named =libfoo.a= which is the same library the the /archive/
@@ -714,7 +715,7 @@ failure.
   [[ ${PIPESTATUS[0]} -eq 0 ]] && echo Configure succeeded!
 #+end_src
 
-#+RESULTS[a5ce364fd7fc1652163079f4bde9212ba016fd9c]: configure_final
+#+RESULTS[bac57fcab0fb9aec764708372bb6fd0754c703bf]: configure_final
 #+begin_example
   Where should the build process find the source code?    .
   What compiler should emacs be built with?               gcc -g3 -O2
@@ -730,8 +731,8 @@ failure.
   Does Emacs use -lXpm?                                   no
   Does Emacs use -ljpeg?                                  no
   Does Emacs use -ltiff?                                  no
-  Does Emacs use a gif library?                           no
-  Does Emacs use a png library?                           no
+  Does Emacs use a gif library?                           no 
+  Does Emacs use a png library?                           no 
   Does Emacs use -lrsvg-2?                                no
   Does Emacs use -lwebp?                                  no
   Does Emacs use -lsqlite3?                               no
@@ -880,9 +881,9 @@ output can run long, we'll pipe the it into =fmt -w 80= to wrap the output at 80
 
 #+RESULTS[e9ac48e91dc6d66b022591ea76afb0ab4c4ca878]: file_emacs
 #+begin_example
-./src/emacs: ELF 64-bit LSB pie executable, x86-64, version 1
-(SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2,
-BuildID[sha1]=05dc7274daf385f24942ce75679d81e11de268d3, for GNU/Linux 3.2.0,
+./src/emacs: ELF 64-bit LSB pie executable, ARM aarch64, version 1
+(SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1,
+BuildID[sha1]=5c6926b06d5083f898be19f5e62c35ba94276742, for GNU/Linux 3.7.0,
 with debug_info, not stripped
 #+end_example
 
@@ -959,12 +960,12 @@ compiled and source Elisp code, and documentation like refcards, info files, and
 
 #+RESULTS[570d0bff0160ec0c3dc4cf090eb721fbca00c573]: bin_dir
 #+begin_example
--rwxr-xr-x 1 mikeh mikeh 447K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/ctags
--rwxr-xr-x 1 mikeh mikeh 199K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/ebrowse
-lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacs -> emacs-29.1.90
--rwxr-xr-x 1 mikeh mikeh  21M Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacs-29.1.90
--rwxr-xr-x 1 mikeh mikeh 230K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacsclient
--rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/etags
+-rwxr-xr-x 1 mikeh mikeh 446K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/ctags
+-rwxr-xr-x 1 mikeh mikeh 196K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/ebrowse
+lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/emacs -> emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh  21M Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh 233K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/emacsclient
+-rwxr-xr-x 1 mikeh mikeh 435K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/etags
 #+end_example
 
 Emacs helpfully comes with the main and client Emacs binaries, and various programs from generating tags, as well as a
