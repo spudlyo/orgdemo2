@@ -1009,12 +1009,15 @@ In summary:
 - Properties defined in one heading should be inherited by all other headings.
 - Executing a source block should always produce a =begin_example= block.
 - We should use "xelatex" as the latex compiler.
-- We should run the latex to pdf process using "latexmk" with some specific arguments.
+- We should should use the "latexmk" script to manage how many times the compiler is run.
 - Hyperlinks should not have janky red boxes around them (colorlinks=true).
 - We need to add the "titletoc" package to the default latex packages list, but before hyperref.
 - Source code blocks should be formatted in LaTeX using the "listings" package.
 - All source code blocks should have a simple box framing them.
-- Execute the Elisp source block "startup": the buffer should remain unmodified, code heading folded.
+- Execute the Elisp source block "startup":
+- Ensure the buffer should remains unmodified
+- The heading the "startup" source block is in should remain folded.
+- When running the latex to pdf process, allow for dynamic TEX content via shell escape.
 
 # Local Variables:
 # fill-column: 100
@@ -1024,7 +1027,7 @@ In summary:
 # org-use-property-inheritance: t
 # org-babel-min-lines-for-block-output: 0
 # org-latex-compiler: "xelatex"
-# org-latex-pdf-process: (concat org-latex-pdf-process " -8bit -shell-escape")
+# org-latex-pdf-process: ("latexmk -f -pdf -%latex -interaction=nonstopmode -output-directory=%o %f")
 # org-latex-hyperref-template: "\\hypersetup{\n pdfauthor={%a},\n pdftitle={%t},\n colorlinks=true}\n")
 # org-latex-default-packages-alist: (("AUTO" "inputenc" t ("pdflatex"))
 #                                    ("T1" "fontenc" t ("pdflatex"))
@@ -1044,5 +1047,6 @@ In summary:
 #         (org-babel-goto-named-src-block "startup")
 #         (org-babel-execute-src-block)
 #         (set-buffer-modified-p nil)
-#         (outline-hide-subtree))
+#         (outline-hide-subtree)
+#         (setq org-latex-pdf-process `(,(concat (car org-latex-pdf-process) " -8bit -shell-escape"))))
 # End:
