@@ -1,5 +1,5 @@
 #+TITLE: Building Emacs from Source
-#+SUBTITLE: An essential guide
+#+SUBTITLE: A guide for Debian based GNU/Linux systems
 #+AUTHOR: Mike Hamrick
 #+EMAIL: mikeh@muppetlabs.com
 #+OPTIONS: ^:nil date:t email:t num:2 tags:nil toc:nil
@@ -44,18 +44,22 @@ you chose to export. By default, if this document is not altered in any way, you
 Debian/Ubuntu version of the document. If you wish to export the RedHat/Fedora version of the
 document, you will first need to:
 
-- change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian";
+- change the "#+SUBTITLE:" line at the top of the document to "RedHat based".
+- change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian".
 - change the ":prefix:" property in section [[constants]] to "rh_".
 
 You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
 
+# #+SUBTITLE: A guide for Debian based GNU/Linux systems
 #+caption: Configure this document using Emacs Lisp for RedHat
-#+begin_src elisp :eval never-export :var os="redhat"
-(let* ((redhat-p    (string= os "redhat"))
+#+begin_src elisp :eval never-export :var os="Debian"
+(let* ((redhat-p    (string= os "RedHat"))
        (exclude_tag (if redhat-p "debian" "redhat"))
        (prefix      (if redhat-p "rh_" "deb_")))
   (save-excursion
     (goto-char (point-min))
+    (when (re-search-forward "^\\(#\\+SUBTITLE: A guide for \\)\\([^ ]+\\)\\(.*\\)" nil t)
+      (replace-match (format "\\1%s\\3" os)))
     (when (re-search-forward "^#\\+EXCLUDE_TAGS:.*" nil t)
       (replace-match (concat "#+EXCLUDE_TAGS: noexport " exclude_tag)))
     (when (re-search-forward "^:prefix:.*" nil t)
@@ -67,8 +71,8 @@ Many of the =bash= code blocks in this document use the =sudo= command in order 
 commands as a privileged user. By default, =sudo= will prompt you for a password, which will cause
 issues when running the commands in this document, since we're not running in an interactive
 mode. In order for your local user to run privileged commands /without/ a password, you'll need to
-make a change to the =/etc/sudoers= file using the =sudo visudo= command, which will fire up =$EDITOR= for
-you to edit =/etc/sudoers=.
+make a change to the =/etc/sudoers= file using the =sudo visudo= command, which will fire up
+=$EDITOR= for you to edit =/etc/sudoers=.
 
 You should see a section in the file that allows users of a specific group (in this case the =sudo=
 group) to execute any command. On RedHat based GNU/Linux systems the group is called =wheel= rather
@@ -281,8 +285,6 @@ spits out.
 #+end_src
 
 #+RESULTS[8af39ca0c0cdb62908a5797e4b562c114d25bd12]: rh_install_devtools
-
-
 
 ** Creating a source directory
 Let's kick things off by creating a =~/src= directory beneath our home directory where all our source
@@ -532,11 +534,11 @@ quickly identify where existing libraries are installed and which compiler flags
 
 #+caption: Install the build-essential meta-package and send the output to /dev/null
 #+name: deb_install_build_essential
-#+begin_src bash
+#+begin_src bash :dir ~/
   sudo apt-get install -qq build-essential pkg-config >/dev/null 2>&1 || echo Failed to install!
 #+end_src
 
-#+RESULTS[5710ea359b6016e54699deb1de9754ea07dd6193]: deb_install_build_essential
+#+RESULTS[aaf45c858e6cc023db94fc858a281c478489ff51]: deb_install_build_essential
 
 ** Installing GNU Texinfo
 Let's run =./configure= and see what happens. We'll provide our =--prefix= option and redirect =stderr= to
@@ -576,6 +578,7 @@ install them now.
 #+end_src
 
 #+RESULTS[96772795ca32600810d841be66ccf99b0c5a6a36]: install_texinfo
+
 <<determine_package_name>> Now you might be asking yourself, "How did you know that the =makeinfo=
 tool is in the =texinfo= package?". That's a good question! It's not immediately obvious that =makeinfo=
 is part of the GNU Texinfo system, and without that key bit of information it'd be a real struggle
@@ -587,15 +590,16 @@ contain specific filenames.
 
 #+caption: Install apt-file and update its database
 #+name: deb_install_apt_file
-#+begin_src bash
+#+begin_src bash :dir ~/
   sudo apt-get install -qq apt-file >/dev/null 2>&1 || echo Failed to install!
   sudo apt-file update >/dev/null 2>&1 || echo Failed to run apt-file update!
 #+end_src
 
-#+RESULTS[8bc0f5f65c0314817e5832f02240290e58504a41]: deb_install_apt_file
+#+RESULTS[207cfa115b4364a62f2de2e700bbdae17321fe7f]: deb_install_apt_file
+
 Now that it's installed, you can see it in action. To cut down on false positives, we're running
-=apt-file search= with the =--regex= option to use a regular expression to search for files that end in
-=makeinfo=.
+=apt-file search= with the =--regex= option to use a regular expression to search for files that end
+in =makeinfo=.
 
 #+caption: Use apt-file to preform a regex search on makeinfo
 #+name: deb_apt_file_search
@@ -609,12 +613,12 @@ libear: /usr/lib/x86_64-linux-gnu/bear/wrapper.d/makeinfo
 texinfo: /usr/bin/makeinfo
 #+end_example
 
-There you have it: =/usr/bin/makeinfo= is very likely the binary we're looking for, and we can see it
-comes from the =texinfo= package!
+There you have it: =/usr/bin/makeinfo= is very likely the binary we're looking for, and we can see
+it comes from the =texinfo= package!
 
 *** Determining the package name for a given filename                :redhat:
-Luckily the =dnf= tool has a =provides= sub-command that you can use to determine which package a given
-file exists in. We can use this to determine which package that the =makeinfo= command is in.
+Luckily the =dnf= tool has a =provides= sub-command that you can use to determine which package a
+given file exists in. We can use this to determine which package that the =makeinfo= command is in.
 
 #+caption: Use "dnf provides" to find the package containing makeinfo
 #+name: rh_dnf_provides
