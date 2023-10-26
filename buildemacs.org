@@ -38,10 +38,9 @@ This document is intended to be "run" on a GNU/Linux system. It has been tested 
 Server 38) and Debian based systems (Ubuntu Server 22.04).
 
 ** Choosing which version of the document to export
-<<doc version>>
-The document will will differ slightly depending on which version of the document you chose to export. By default, if
-this document is not altered in any way, you will get the Debian/Ubuntu version of the document. If you wish to export
-the RedHat/Fedora version of the document, you will first need to:
+<<doc version>> The document will will differ slightly depending on which version of the document you chose to
+export. By default, if this document is not altered in any way, you will get the Debian/Ubuntu version of the
+document. If you wish to export the RedHat/Fedora version of the document, you will first need to:
 
 - change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian";
 - change the ":prefix:" property in section [[constants]] to "rh_".
@@ -185,8 +184,7 @@ Emacs will appear to be locked up during this time.
 :rh_maybe_sudo_deb: echo
 :deb_maybe_sudo_deb: sudo
 :END:
-<<constants>>
-The properties above define all the constants we're using throughout this document. By default, when you
+<<constants>> The properties above define all the constants we're using throughout this document. By default, when you
 run this document it will describe how to build GNU Emacs under a Debian based system. If you'd like to change this,
 there are instructions on how to do so in the [[doc version]] section.
 
@@ -302,10 +300,9 @@ to complete. We'll provide the =--quiet= option to =git= to tell it not to repor
   #+RESULTS[8c1c3caeaa94401e641350ecb1d16751ba044fdf]: clone_repo
 
 ** Digging into the tags
-<<tags>>
-Now that we've cloned the repository and set our current working directory to =~/src/emacs=, let's take a look at some
-tags. Emacs uses =git= tags to capture a point in the commit history that marks the release of a specific version. We can
-run =git tag= to list all the available tags.
+<<tags>> Now that we've cloned the repository and set our current working directory to =~/src/emacs=, let's take a look
+at some tags. Emacs uses =git= tags to capture a point in the commit history that marks the release of a specific
+version. We can run =git tag= to list all the available tags.
 
 #+caption: How many tags are there?
 #+name: num_tags
@@ -557,11 +554,10 @@ install them now.
 #+end_src
 
 #+RESULTS[96772795ca32600810d841be66ccf99b0c5a6a36]: install_texinfo
-<<determine_package_name>>
-Now you might be asking yourself, "How did you know that the =makeinfo= tool is in the =texinfo= package?". That's a
-good question! It's not immediately obvious that =makeinfo= is part of the GNU Texinfo system, and without that key bit
-of information it'd be a real struggle to figure out which package to install in order to satisfy the missing
-dependency.
+<<determine_package_name>> Now you might be asking yourself, "How did you know that the =makeinfo= tool is in the
+=texinfo= package?". That's a good question! It's not immediately obvious that =makeinfo= is part of the GNU Texinfo
+system, and without that key bit of information it'd be a real struggle to figure out which package to install in order
+to satisfy the missing dependency.
 
 *** Determining the package name for a given a filename              :debian:
 Luckily there's a handy tool called =apt-file= that you can install that searches for packages that contain specific
@@ -974,9 +970,9 @@ I hope you've enjoyed reading this document! Hopefully it's also given you the b
 {{{pr(osver)}}} systems, and the confidence to explore creating your own perfect build of GNU Emacs!
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
-<<emacs variables>>
-In this section, we're going to set up some buffer local variables and run some code. This will allow this literate
-document to run code on your system. Most of these changes are in service to generating a nice PDF file using LaTeX.
+<<emacs variables>> In this section, we're going to set up some buffer local variables and run some code. This will
+allow this literate document to run code on your system. Most of these changes are in service to generating a nice PDF
+file using LaTeX.
 
 In summary:
 
