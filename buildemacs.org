@@ -309,7 +309,7 @@ run =git tag= to list all the available tags.
 
 #+caption: How many tags are there?
 #+name: num_tags
-#+begin_src bash
+#+begin_src bash :cache yes
   git tag | wc -l
   #+end_src
 
@@ -858,7 +858,7 @@ directories, sockets, or other unusual filesystem objects).
 
 #+caption: Find files named emacs
 #+name: find_emacs
-#+begin_src bash
+#+begin_src bash :cache yes
   find . -type f -name emacs
 #+end_src
 
