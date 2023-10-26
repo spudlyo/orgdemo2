@@ -340,12 +340,8 @@ emacs-29.0.90   Emacs 29.0.90 pretest
 #+end_example
 
 #+name: emacs_tag
-#+begin_src elisp :results value :exports none :var text=sorted_tags
-(with-temp-buffer
-  (insert text) (beginning-of-buffer)
-  (if (re-search-forward "\\(\\S-+\\)" nil t)
-      (match-string 1)
-    nil))
+#+begin_src elisp :results value :exports none :var line=sorted_tags
+(string-trim (car (split-string line)))
 #+end_src
 
 You might get a slightly different list when you run the command, but as of this writing these are all the tagged
