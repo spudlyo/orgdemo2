@@ -99,8 +99,8 @@ this document to Plain Text or PDF formats without installing any additional Ema
 should work with Vanilla Emacs. You also don't need the GUI version of Emacs; it should work fine in
 the Terminal.
 
-On Ubuntu 22.04 you can install Emacs 27.1 by running: =sudo apt install emacs-nox=. On Fedora 38 you
-can install Emacs 28.3 using =sudo dnf install emacs-nox=. Ideally, you will be viewing this document
+On Ubuntu you can install Emacs 27.1 by running: =sudo apt install emacs-nox=. On Fedora you can
+install Emacs 28.3 using =sudo dnf install emacs-nox=. Ideally, you will be viewing this document
 inside GNU Emacs.
 
 ** LaTeX Prerequisites
@@ -581,7 +581,7 @@ tool is in the =texinfo= package?". That's a good question! It's not immediately
 is part of the GNU Texinfo system, and without that key bit of information it'd be a real struggle
 to figure out which package to install in order to satisfy the missing dependency.
 
-*** Determining the package name for a given a filename              :debian:
+*** Determining the package name for a given filename                :debian:
 Luckily there's a handy tool called =apt-file= that you can install that searches for packages that
 contain specific filenames.
 
@@ -1018,7 +1018,7 @@ In summary:
 - Source code blocks should be formatted in LaTeX using the "listings" package.
 - All source code blocks should have a simple box framing them.
 - Execute the Elisp source block "startup":
-- The heading the "startup" source block is in should remain folded.
+- The heading the "startup" source block is in should remain folded after execution.
 - When running the latex to pdf process, allow for dynamic TEX content via shell escape.
 
 # Local Variables:
