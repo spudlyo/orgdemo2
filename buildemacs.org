@@ -60,8 +60,6 @@ You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
       (replace-match (concat ":prefix: " prefix)))))
 #+end_src
 
-#+RESULTS[68bd323dcc138a1614b613017ea701a1bdb005d8]:
-
 *** Using the 'sudo' command
 Many of the =bash= code blocks in this document use the =sudo= command in order to execute shell commands as a
 privileged user. By default, =sudo= will prompt you for a password, which will cause issues when running the commands in
@@ -259,7 +257,7 @@ In this chapter, I'll demonstrate how to download the Emacs source code using =g
 to a specific tagged release of GNU Emacs.
 
 ** Installing Development Tools                                      :redhat:
-By default, on the {{{pr(osver)}}} systems I tested on, the =git= program is not installed, so the first thing we'll do
+By default, on the {{{pr(osver)}}} systems I tested, the =git= program is not installed, so the first thing we'll do
 is install it using the =dnf= package manager, along with some other development tools. Here we provide the =-y= option
 so =dnf= doesn't ask us any questions, and we'll redirect =stdout= and =stderr= to =/dev/null= to suppress the copious
 amount of output that =dnf= spits out.
