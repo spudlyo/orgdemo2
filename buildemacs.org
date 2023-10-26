@@ -118,7 +118,7 @@ asynchronously. This is around 1.5GB of packages, so make sure you have the spac
 #+caption: Install LaTeX Prerequisites on Debian based systems
 #+name: deb_install_latex
 #+begin_src bash :eval never-export :results output replace :dir ~/
-  sudo apt-get install -qq \
+  sudo apt install -qq \
        texlive-latex-extra \
        texlive-extra-utils \
        texlive-xetex \
@@ -175,7 +175,7 @@ Emacs will appear to be locked up during this time.
 :deb_osver: Ubuntu Server 22.04
 :rh_osver: Fedora Server 38
 :rh_install: sudo dnf install -y
-:deb_install: sudo apt-get install -qq
+:deb_install: sudo apt install -qq
 :deb_gnutls: libgnutls28-dev
 :rh_gnutls: gnutls-devel
 :deb_ncurses: libncurses-dev
@@ -519,7 +519,7 @@ helper tool that lets you quickly identify where existing libraries are installe
 #+caption: Install the build-essential meta-package and send the output to /dev/null
 #+name: install_build_essential
 #+begin_src bash
-  sudo apt-get install -qq build-essential pkg-config >/dev/null 2>&1
+  sudo apt install -qq build-essential pkg-config >/dev/null 2>&1
 #+end_src
 
 #+RESULTS[5710ea359b6016e54699deb1de9754ea07dd6193]: install_build_essential
@@ -573,7 +573,7 @@ filenames.
 #+caption: Install apt-file and update its database
 #+name: install_apt_file
 #+begin_src bash
-  sudo apt-get install -qq apt-file >/dev/null 2>&1
+  sudo apt install -qq apt-file >/dev/null 2>&1
   sudo apt-file update >/dev/null 2>&1
 #+end_src
 
@@ -970,12 +970,10 @@ lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 /home/mikeh/emacs-29.1.90/bin/emacs -
 Emacs helpfully comes with the main and client Emacs binaries, and various programs from generating tags, as well as a
 program for browsing C++ class hierarchies. I think our work here is done!
 
-
 * Final Thoughts
 
 I hope you've enjoyed reading this document! Hopefully it's also given you the basics of building Emacs on
-{{{pr(osver)}}} systems, and the confidence to explore creating your perfect build of GNU Emacs!
-
+{{{pr(osver)}}} systems, and the confidence to explore creating your own perfect build of GNU Emacs!
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>>
@@ -995,7 +993,7 @@ In summary:
 - We need to add the "titletoc" package to the default latex packages list, but before hyperref.
 - Source code blocks should be formatted in LaTeX using the "listings" package.
 - All source code blocks should have a simple box framing them.
-- Execute a elisp source block called "startup": the code heading should remain folded.  
+- Execute an Elisp source block called "startup": the buffer should remain unmodified, and code heading folded.
 
 # Local Variables:
 # fill-column: 120
