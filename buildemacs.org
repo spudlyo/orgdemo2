@@ -142,7 +142,7 @@ asynchronously. This is around 1.5GB of packages, so make sure you have the spac
        latexmk \
        inkscape \
        jetbrains-mono-fonts \
-       texlive-inter > /dev/null 2>&1 && echo Success!
+       rsms-inter-fonts > /dev/null 2>&1 && echo Success!
 #+end_src
 
 ** Executing the code found in this document
