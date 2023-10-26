@@ -182,16 +182,14 @@ the document. This is not asynchronous, and Emacs will appear to be locked up du
 :deb_user: an Ubuntu 22.04 user
 :deb_osver: Ubuntu Server 22.04
 :rh_osver: Fedora Server 38
+:deb_osver_short: Ubuntu
+:rh_osver_short: Fedora
 :rh_install: sudo dnf install -y
 :deb_install: sudo apt-get install -qq
 :deb_gnutls: libgnutls28-dev
 :rh_gnutls: gnutls-devel
 :deb_ncurses: libncurses-dev
 :rh_ncurses: ncurses-devel
-:deb_maybe_sudo_rh: echo
-:rh_maybe_sudo_rh: sudo
-:rh_maybe_sudo_deb: echo
-:deb_maybe_sudo_deb: sudo
 :END:
 <<constants>> The properties above define all the constants we're using throughout this document. By
 default, when you run this document it will describe how to build GNU Emacs under a Debian based
@@ -270,18 +268,21 @@ In this chapter, I'll demonstrate how to download the Emacs source code using =g
 your view of the code to a specific tagged release of GNU Emacs.
 
 ** Installing Development Tools                                      :redhat:
-By default, on the {{{pr(osver)}}} systems I tested, the =git= program is not installed, so the first
-thing we'll do is install it using the =dnf= package manager, along with some other development
-tools. Here we provide the =-y= option so =dnf= doesn't ask us any questions, and we'll redirect =stdout=
-and =stderr= to =/dev/null= to suppress the copious amount of output that =dnf= spits out.
+By default, on the {{{pr(osver)}}} systems I tested, the =git= program is not installed, so the
+first thing we'll do is install it using the =dnf= package manager, along with some other
+development tools. Here we provide the =-y= option so =dnf= doesn't ask us any questions, and we'll
+redirect =stdout= and =stderr= to =/dev/null= to suppress the copious amount of output that =dnf=
+spits out.
 
 #+caption: Install the the Development Tools group of packages
 #+name: rh_install_devtools
 #+begin_src bash :dir ~/
-  <<get_prop("maybe_sudo_rh")>> dnf groupinstall -y --quiet "Development Tools" >/dev/null 2>&1
+  sudo dnf groupinstall -y --quiet "Development Tools" >/dev/null 2>&1 || echo Failed to install!
 #+end_src
 
-#+RESULTS[08fc9e4fb501387de42fceba3c51f6f88c7cb67a]: rh_install_devtools
+#+RESULTS[8af39ca0c0cdb62908a5797e4b562c114d25bd12]: rh_install_devtools
+
+
 
 ** Creating a source directory
 Let's kick things off by creating a =~/src= directory beneath our home directory where all our source
@@ -523,16 +524,16 @@ For example, run './configure MAKE=gnu-make'.
 Configure failed!
 #+end_example
 
-Oops, looks like we don't have GNU Make installed. By default on {{{pr(osver)}}} there aren't any
-development or build tools installed. We can solve this problem by installing the =build-essential=
-meta-package, which installs a C/C++ compiler, GNU Make, and some libraries. We'll also take this
-opportunity to install the =pkg-config= utility which is a helper tool that lets you quickly identify
-where existing libraries are installed and which compiler flags to use.
+Oops, looks like we don't have GNU Make installed. By default on {{{pr(osver_short)}}} there aren't
+any development or build tools installed. We can solve this problem by installing the
+=build-essential= meta-package, which installs a C/C++ compiler, GNU Make, and some libraries. We'll
+also take this opportunity to install the =pkg-config= utility which is a helper tool that lets you
+quickly identify where existing libraries are installed and which compiler flags to use.
 
 #+caption: Install the build-essential meta-package and send the output to /dev/null
 #+name: deb_install_build_essential
 #+begin_src bash
-  <<get_prop("maybe_sudo_deb")>> apt-get install -qq build-essential pkg-config >/dev/null 2>&1
+  sudo apt-get install -qq build-essential pkg-config >/dev/null 2>&1 || echo Failed to install!
 #+end_src
 
 #+RESULTS[5710ea359b6016e54699deb1de9754ea07dd6193]: deb_install_build_essential
@@ -563,9 +564,10 @@ Configure failed!
 #+end_example
 
 Oops, looks like we don't have the =makeinfo= tool installed. GNU Texinfo is the official
-documentation format of the GNU project, and the Emacs build process uses =makeinfo= to build the =info=
-files for the wealth of documentation that comes with it. By default on {{{pr(osver)}}}, none of the
-GNU Texinfo tools (like =makeinfo=) are installed, so let's install them now.
+documentation format of the GNU project, and the Emacs build process uses =makeinfo= to build the
+=info= files for the wealth of documentation that comes with it. By default on
+{{{pr(osver_short)}}}, none of the GNU Texinfo tools (like =makeinfo=) are installed, so let's
+install them now.
 
 #+caption: Install the GNU Texinfo tools
 #+name: install_texinfo
@@ -586,8 +588,8 @@ contain specific filenames.
 #+caption: Install apt-file and update its database
 #+name: deb_install_apt_file
 #+begin_src bash
-  <<get_prop("maybe_sudo_deb")>> apt-get install -qq apt-file >/dev/null 2>&1
-  <<get_prop("maybe_sudo_deb")>> apt-file update >/dev/null 2>&1
+  sudo apt-get install -qq apt-file >/dev/null 2>&1 || echo Failed to install!
+  sudo apt-file update >/dev/null 2>&1 || echo Failed to run apt-file update!
 #+end_src
 
 #+RESULTS[8bc0f5f65c0314817e5832f02240290e58504a41]: deb_install_apt_file
@@ -993,8 +995,8 @@ tags, as well as a program for browsing C++ class hierarchies. I think our work 
 
 * Final Thoughts
 I hope you've enjoyed reading this document! Hopefully it's also given you the basics of building
-Emacs on {{{pr(osver)}}} systems, and the confidence to explore creating your own perfect build of
-GNU Emacs!
+Emacs on {{{pr(osver_short)}}} systems, and the confidence to explore creating your own perfect
+build of GNU Emacs!
 
 * Set some Emacs Variables and Run some Elisp Code                 :noexport:
 <<emacs variables>> In this section, we're going to set up some buffer local variables and run some
