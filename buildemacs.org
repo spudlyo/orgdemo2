@@ -50,8 +50,7 @@ document, you will first need to:
 
 You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
 
-# #+SUBTITLE: A guide for Debian based GNU/Linux systems
-#+caption: Configure this document using Emacs Lisp for RedHat
+#+caption: Configure this document for RedHat
 #+begin_src elisp :results none :eval never-export :var os="RedHat"
 (let* ((redhat-p    (string= os "RedHat"))
        (exclude_tag (if redhat-p "debian" "redhat"))
@@ -135,7 +134,7 @@ space available.
        latexmk \
        inkscape \
        fonts-jetbrains-mono \
-       fonts-inter > /dev/null 2>&1 || echo Failed!
+       fonts-inter > /dev/null 2>&1
 #+end_src
 
 #+caption: Install LaTeX Prerequisites on RedHat based systems
@@ -153,7 +152,7 @@ space available.
        latexmk \
        inkscape \
        jetbrains-mono-fonts \
-       rsms-inter-fonts > /dev/null 2>&1 || echo Failed!
+       rsms-inter-fonts > /dev/null 2>&1
 #+end_src
 
 ** Executing the code found in this document
@@ -165,14 +164,19 @@ blocks are executed, and lets you observe each result before moving to the next 
 
 Alternately, you can change the default header arg from =:cache yes= to =:cache no= at the top of the
 document. Once you do this, when you export the document it should run all the source code
-blocks. Annoyingly, it will prompt you for confirmation on each =bash= code block. If you'd like to
-change this, you can hit =C-c C-c= on the block below which will cause Org-mode to never confirm the
-execution of any source block.
+blocks. Annoyingly, it will prompt you for confirmation on each =bash= code block.
+
+If you'd like to change this, you can hit =C-c C-c= on the block below, which will modify the cache
+setting for you, as well as cause Org-mode to never confirm the execution of any source block.
 
 # You know what you're doing, right? Right!?
-#+name: no_babel_confirm
-#+begin_src elisp :results none :eval never-export
-(setq org-confirm-babel-evaluate nil)
+#+name: no_cache_no_confrm
+#+begin_src elisp :results none :eval never-export :var cache="no"
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^\\(#\\+PROPERTY:.*\\):cache [A-Za-z]+")
+      (replace-match (format "\\1:cache %s" cache))))
+  (setq org-confirm-babel-evaluate `,(string= cache "yes"))
 #+end_src
 
 *NOTE*: Building Emacs can take 10-15 minutes or more on a slow machine. This means Emacs can be
@@ -205,22 +209,22 @@ What follows is code that will be used throughout the document.
 
 #+name: lsplit
 #+begin_src elisp :results value :exports none :var line="foo bar\nbaz"
-(car (split-string line))
+  (car (split-string line))
 #+end_src
 
 #+name: get_prop
 #+begin_src elisp :results value :exports none :var prop="test"
-(let ((ret (org-property-values prop))
-      (prefix (org-property-values "prefix")))
-  (if ret
-      (car ret)
-    (when prefix
-      (car (org-property-values (concat (car prefix) prop))))))
+  (let ((ret (org-property-values prop))
+	(prefix (org-property-values "prefix")))
+    (if ret
+	(car ret)
+      (when prefix
+	(car (org-property-values (concat (car prefix) prop))))))
 #+end_src
 
 #+name: strip
 #+begin_src elisp :results value raw :exports none :var line="  foo  "
-(string-trim line)
+  (string-trim line)
 #+end_src
 
 The following function is run when the document is loaded by Emacs. You have to OK this first. Most
@@ -231,25 +235,25 @@ makes Org documents look amazing. Sorry, not sorry.
 
 #+NAME: startup
 #+begin_src emacs-lisp :results none :eval never-export :cache no :exports none
-(require 'ox)
+  (require 'ox)
 
-(if (null custom-enabled-themes)
-    (load-theme 'leuven))
+  (if (null custom-enabled-themes)
+      (load-theme 'leuven))
 
-(defun my-latex-export-example-blocks (text backend info)
-  "Export example blocks as smallbox env."
-  (when (org-export-derived-backend-p backend 'latex)
-    (with-temp-buffer
-      (insert text)
-      ;; replace verbatim env with smallbox
-      (goto-char (point-min))
-      (replace-string "\\begin{verbatim}" "\\begin{smallbox}")
-      (replace-string "\\end{verbatim}" "\\end{smallbox}")
-      (buffer-substring-no-properties (point-min) (point-max)))))
+  (defun my-latex-export-example-blocks (text backend info)
+    "Export example blocks as smallbox env."
+    (when (org-export-derived-backend-p backend 'latex)
+      (with-temp-buffer
+	(insert text)
+	;; replace verbatim env with smallbox
+	(goto-char (point-min))
+	(replace-string "\\begin{verbatim}" "\\begin{smallbox}")
+	(replace-string "\\end{verbatim}" "\\end{smallbox}")
+	(buffer-substring-no-properties (point-min) (point-max)))))
 
-(make-local-variable 'org-export-filter-example-block-functions)
-(add-to-list 'org-export-filter-example-block-functions
-             'my-latex-export-example-blocks)
+  (make-local-variable 'org-export-filter-example-block-functions)
+  (add-to-list 'org-export-filter-example-block-functions
+	       'my-latex-export-example-blocks)
 #+end_src
 
 * Introduction
@@ -278,10 +282,10 @@ spits out.
 #+caption: Install the the Development Tools group of packages
 #+name: rh_install_devtools
 #+begin_src bash :dir ~/
-  sudo dnf groupinstall -y --quiet "Development Tools" >/dev/null 2>&1 || echo Failed to install!
+  sudo dnf groupinstall -y --quiet "Development Tools" >/dev/null 2>&1 || echo Failed!
 #+end_src
 
-#+RESULTS[8af39ca0c0cdb62908a5797e4b562c114d25bd12]: rh_install_devtools
+#+RESULTS[3e6621e70602b982284dfbd2ba7784e0c0e1b5fd]: rh_install_devtools
 
 ** Creating a source directory
 Let's kick things off by creating a =~/src= directory beneath our home directory where all our source
@@ -978,7 +982,8 @@ refcards, info files, and manual pages.
 #+caption: Run ls with the long and human-readable size options
 #+name: bin_dir
 #+begin_src bash
-  ls -lh <<tag_dir()>>/bin/*
+  cd <<tag_dir()>>/bin
+  ls -lh
 #+end_src
 
 #+RESULTS[570d0bff0160ec0c3dc4cf090eb721fbca00c573]: bin_dir
