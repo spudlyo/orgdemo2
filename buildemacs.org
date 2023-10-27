@@ -7,6 +7,7 @@
 #+SETUPFILE: latex.setup
 #+INCLUDE: macros.setup
 #+EXCLUDE_TAGS: noexport redhat
+#+EXPORT_FILE_NAME: deb_buildemacs
 #+PROPERTY: header-args :noweb yes :exports both :cache yes
 #+PROPERTY: header-args:bash :results output :dir ~/src/emacs
 
@@ -47,23 +48,27 @@ If you wish to export the RedHat/Fedora specific version of the document, you wi
 
 - change the "#+SUBTITLE:" line at the top of the document to read "RedHat based".
 - change the "#+EXCLUDE_TAGS:" line at the top of the document to "noexport debian".
+- change the "#+EXPORT_FILE_NAME:" line at the top of the document to "rh_buildemacs".
 - change the ":prefix:" property in section [[constants]] to "rh_".
 
 You can hit =C-c C-c= on the Emacs Lisp block below to do just that.
 
 #+caption: Configure this document for RedHat
 #+begin_src elisp :results none :eval never-export :var os="RedHat"
-(let* ((redhat-p    (string= os "RedHat"))
-       (exclude_tag (if redhat-p "debian" "redhat"))
-       (prefix      (if redhat-p "rh_" "deb_")))
-  (save-excursion
-    (goto-char (point-min))
-    (when (re-search-forward "^\\(#\\+SUBTITLE: A guide for \\)\\([^ ]+\\)\\(.*\\)" nil t)
-      (replace-match (format "\\1%s\\3" os)))
-    (when (re-search-forward "^#\\+EXCLUDE_TAGS:.*" nil t)
-      (replace-match (concat "#+EXCLUDE_TAGS: noexport " exclude_tag)))
-    (when (re-search-forward "^:prefix:.*" nil t)
-      (replace-match (concat ":prefix: " prefix)))))
+  (let* ((redhat-p  (string= os "RedHat"))
+	 (no_export (if redhat-p "debian" "redhat"))
+	 (os_short  (if redhat-p "rh" "deb"))
+	 (prefix    (if redhat-p "rh_" "deb_")))
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^\\(#\\+SUBTITLE: A guide for \\)\\([^ ]+\\)\\(.*\\)" nil t)
+	(replace-match (format "\\1%s\\3" os)))
+      (when (re-search-forward "^#\\+EXCLUDE_TAGS:.*" nil t)
+	(replace-match (concat "#+EXCLUDE_TAGS: noexport " no_export)))
+      (when (re-search-forward "^#\\+EXPORT_FILE_NAME:.*" nil t)
+	(replace-match (format "#+EXPORT_FILE_NAME: %s_buildemacs" os_short)))
+      (when (re-search-forward "^:prefix:.*" nil t)
+	(replace-match (concat ":prefix: " prefix)))))
 #+end_src
 
 Once you've made the necessary changes, you can export the document as usual.
