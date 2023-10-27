@@ -1,0 +1,758 @@
+              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                       BUILDING EMACS FROM SOURCE
+               A guide for RedHat based GNU/Linux systems
+
+                              Mike Hamrick
+                          mikeh@muppetlabs.com
+              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+
+
+
+1 Introduction
+══════════════
+
+  In this document we're going to demonstrate how you, a Fedora 38 user,
+  can download and build the source code for GNU Emacs. The goal is to
+  walk through each step of the process, and explain things as we go. By
+  default, most systems do not have the necessary software components
+  installed that are required to build GNU Emacs from source, so we'll
+  also be installing a lot of software on your computer. You'll need
+  `sudo' access for this, and this document assumes that your local user
+  can run `sudo' without a password.
+
+  Much of this document is going to involve trying to run the Emacs
+  `./configure' script, having something fail, resolving some missing
+  software dependency, and then trying again until we finally have a
+  successful build. It's a bit of an iterative process.
+
+
+2 Obtaining the Source Code
+═══════════════════════════
+
+  In this chapter, I'll demonstrate how to download the Emacs source
+  code using `git' and how to set your view of the code to a specific
+  tagged release of GNU Emacs.
+
+
+2.1 Installing Development Tools
+────────────────────────────────
+
+  By default, on the Fedora Server 38 systems I tested, the `git'
+  program is not installed, so the first thing we'll do is install it
+  using the `dnf' package manager, along with some other development
+  tools. Here we provide the `-y' option so `dnf' doesn't ask us any
+  questions, and we'll redirect `stdout' and `stderr' to `/dev/null' to
+  suppress the copious amount of output that `dnf' spits out.
+
+  ┌────
+  │ sudo dnf groupinstall -y --quiet "Development Tools" >/dev/null 2>&1 || echo Failed!
+  └────
+  Listing 1: Install the the Development Tools group of packages
+
+
+2.2 Creating a source directory
+───────────────────────────────
+
+  Let's kick things off by creating a `~/src' directory beneath our home
+  directory where all our source code is going to live. We'll also
+  change our current working directory to this directory. This helps
+  keep things tidy.
+
+  ┌────
+  │ mkdir -p ~/src; cd ~/src
+  └────
+  Listing 2: Create and cd to our source directory
+
+
+2.3 Cloning the Repo
+────────────────────
+
+  The next thing we'll want to do is clone the Emacs repository from
+  /Savannah/, the software forge hosted by the Free Software
+  Foundation. This will be a full clone, complete with history,
+  branches, and tags, so it can take a few minutes to complete. We'll
+  provide the `--quiet' option to `git' to tell it not to report its
+  progress to the screen.
+
+  ┌────
+  │ git clone --quiet https://git.savannah.gnu.org/git/emacs.git
+  │ cd emacs
+  └────
+  Listing 3: Clone the Emacs git repository from Savannah
+
+
+2.4 Digging into the tags
+─────────────────────────
+
+  Now that we've cloned the repository and set our current working
+  directory to `~/src/emacs', let's take a look at some tags. Emacs uses
+  `git' tags to capture a point in the commit history that marks the
+  release of a specific version. We can run `git tag' to list all the
+  available tags.
+
+  ┌────
+  │ git tag | wc -l
+  └────
+  Listing 4: How many tags are there?
+
+  ┌────
+  │ 183
+  └────
+
+  Wow, 183 tags is a lot! We can narrow it down a bit by listing just
+  the tags for Emacs 29. We'll use the `git tag' command with the
+  `--list' argument (using the shell wildcard syntax), as well as
+  specifying the `--sort' option, to sort the tags by when the tag
+  object in the database was created. We'll also specify the `-n'
+  argument to print a single line of annotation for the tag.
+
+  ┌────
+  │ git tag --list 'emacs-29.*' --sort=-taggerdate -n1
+  └────
+  Listing 5: List all the tags for Emacs version 29, sorted by date in
+  descending order
+
+  ┌────
+  │ emacs-29.1.90   Emacs 29.1.90 pretest
+  │ emacs-29.1      Emacs 29.1
+  │ emacs-29.1-rc1  Emacs 29.1 RC1
+  │ emacs-29.0.92   Emacs 29.0.92
+  │ emacs-29.0.91   Emacs 29.0.91 pretest
+  │ emacs-29.0.90   Emacs 29.0.90 pretest
+  └────
+
+  You might get a slightly different list when you run the command, but
+  as of this writing these are all the tagged releases of Emacs
+  29. We'll be working with the version tagged "emacs-29.1.90", as
+  that's the most recent.
+
+
+2.5 Creating the branch
+───────────────────────
+
+  Now that we've figured out which version tag we're going to want to
+  use as the base for the version of Emacs that we're building, it's
+  time to create a branch associated with that tag. Because we just
+  cloned the repository, we're currently on at the default branch.
+
+  ┌────
+  │ git branch --show-current
+  └────
+  Listing 6: Ask git the name of our current branch
+
+  ┌────
+  │ master
+  └────
+
+  For our purposes, we don't want to build Emacs from the "master"
+  branch. Instead, let's create a branch that points to the same commit
+  as the "emacs-29.1.90" tag that we identified in section 2.4.
+
+  ┌────
+  │ git checkout -b mybranch tags/emacs-29.1.90 2>&1
+  └────
+  Listing 7: Create a branch that points to a specific tag
+
+  ┌────
+  │ Switched to a new branch 'mybranch'
+  └────
+
+  We're good to go! We've created our branch at our tagged location, so
+  now we can start working on building the program.
+
+
+3 Creating the configure script
+═══════════════════════════════
+
+  If you've ever built an old-school UNIX program from source, you've
+  probably run a `./configure' script. This script tests specific
+  details about the environment it's running under in order to inform
+  the build process how it should interact with the code in a way that's
+  compatible with the operating system and libraries that exist on the
+  system. Normally when building trivial programs, you can run a
+  familiar incantation like `./configure && make && make install' and
+  you're good to go.
+
+  Let's see if we can find a suitable `./configure' script in the Emacs
+  repository.
+
+  ┌────
+  │ ls configure*
+  └────
+  Listing 8: Look for the configure script
+
+  ┌────
+  │ configure.ac
+  └────
+
+  Looks like there isn't a `./configure' script for us to run, so we'll
+  have to generate one. The `./configure' script is generated using a
+  tool called `autoconf' which is part of the GNU Build System, also
+  known as Autotools. The `autoconf' tool reads the `./configure.ac'
+  file we saw above and uses that to generate the `./configure' script
+  we'll ultimately run.
+
+
+3.1 Running the autogen.sh script
+─────────────────────────────────
+
+  There is a script called `autogen.sh' that drives this process. It
+  also modifies your cloned `.git/config' configuration file, as well as
+  adding various hooks in `.git/hooks' that are suitable for Emacs
+  development. Let's run the script and take a look at the first few
+  lines of the output. We'll run `autogen.sh' with the `autoconf'
+  argument to tell it to only generate the `./configure' script, to to
+  leave our git configuration untouched.
+
+  ┌────
+  │ ./autogen.sh autoconf | head -n3
+  └────
+  Listing 9: Run the autogen.sh script and show a bit of the output
+
+  ┌────
+  │ Checking whether you have the necessary tools...
+  │ (Read INSTALL.REPO for more details on building Emacs)
+  │ Checking for autoconf (need at least version 2.65) ... missing
+  └────
+
+  It looks like we're going to need to install `autoconf' before this is
+  going to work for us.
+
+  *NOTE*: When we're installing software in this document, we'll often
+  suppress the output like we do below by redirecting `stderr' and
+  `stdout' to `/dev/null'. This is because the output is often quite
+  long and irrelevant to the task at hand.
+
+  ┌────
+  │ sudo dnf install -y autoconf >/dev/null 2>&1
+  └────
+  Listing 10: Install autoconf and send the output to /dev/null
+
+  Now if we run the `autogen.sh' script again, it should generate our
+  `./configure' script. This time we'll run it with the `--no-check'
+  argument, because we've satisfied the autoconf dependency.
+
+  ┌────
+  │ ./autogen.sh --no-check autoconf
+  └────
+  Listing 11: Second time is a charm!
+
+  ┌────
+  │ Building aclocal.m4 ...
+  │ Running 'autoreconf -fi -I m4' ...
+  │ You can now run './autogen.sh git'.
+  └────
+
+  If we look for the `./configure' script again, it should be there!
+
+  ┌────
+  │ stat --format "%s %n" ./configure
+  └────
+  Listing 12: Look for the configure script again
+
+  ┌────
+  │ 1189578 ./configure
+  └────
+
+  Wow, that is one huge shell script! When was the last time /you/ wrote
+  a shell script that was 1189578 bytes long?!
+
+
+4 Configuring the build process
+═══════════════════════════════
+
+  In this section we're going to run the `./configure' script to kick
+  off the configuration process. We're not going to specify which Emacs
+  features we want to enable, or get into any specifics of how it is
+  built. Instead we're going to see what it takes to build a minimal
+  version of Emacs.
+
+
+4.1 The prefix argument
+───────────────────────
+
+  One argument we /will/ be providing to the configure script will be
+  the `--prefix' option. This tells the script the base directory of
+  where all the files should be installed. By default, when we later run
+  `make install', there will be a number of directories created for both
+  architecture-dependent and -independent files like binaries,
+  libraries, Emacs Lisp code, and documentation. All of of these
+  directories will be created beneath the directory we specify with our
+  `--prefix' argument. We'll use `$HOME/emacs-29.1.90' as our prefix
+  directory, this way we can potentially build and install multiple
+  tagged versions of Emacs without conflict.
+
+
+4.2 Installing GNU Texinfo
+──────────────────────────
+
+  Let's run `./configure' and see what happens. We'll provide our
+  `--prefix' option and redirect `stderr' to `stdout' so all the output
+  goes to the same place. Since the `./configure' script can output
+  quite a large volume of text to the terminal we'll also pipe the
+  output into `tail -n5' to just see the last handful of lines. Finally
+  we'll utilize the `bash' array variable `$PIPESTATUS' (which holds the
+  exit statuses of each command executed in the most recent pipeline) to
+  determine if the script invocation failed, and if does fail we'll
+  `echo' our error message.
+
+  ┌────
+  │ ./configure --prefix=$HOME/emacs-29.1.90 2>&1 | tail -5
+  │ [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+  └────
+
+  ┌────
+  │ checking for 'find' args to delete a file... -delete
+  │ checking for brew... no
+  │ configure: error: You do not seem to have makeinfo >= 4.13, and your
+  │ source tree does not seem to have pre-built manuals in the 'info' directory.
+  │ Please install a suitable version of makeinfo.
+  │ Configure failed!
+  └────
+
+  Oops, looks like we don't have the `makeinfo' tool installed. GNU
+  Texinfo is the official documentation format of the GNU project, and
+  the Emacs build process uses `makeinfo' to build the `info' files for
+  the wealth of documentation that comes with it. By default on Fedora,
+  none of the GNU Texinfo tools (like `makeinfo') are installed, so
+  let's install them now.
+
+  ┌────
+  │ sudo dnf install -y texinfo >/dev/null 2>&1
+  └────
+  Listing 14: Install the GNU Texinfo tools
+
+  Now you might be asking yourself, "How did you know that the
+  `makeinfo' tool is in the `texinfo' package?". That's a good question!
+  It's not immediately obvious that `makeinfo' is part of the GNU
+  Texinfo system, and without that key bit of information it'd be a real
+  struggle to figure out which package to install in order to satisfy
+  the missing dependency.
+
+
+Determining the package name for a given filename
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+
+  Luckily the `dnf' tool has a `provides' sub-command that you can use
+  to determine which package a given file exists in. We can use this to
+  determine which package that the `makeinfo' command is in.
+
+  ┌────
+  │ dnf provides makeinfo | head -5
+  └────
+  Listing 15: Use "dnf provides" to find the package containing makeinfo
+
+  ┌────
+  │ Last metadata expiration check: 1:06:03 ago on Sun 22 Oct 2023 12:13:31 AM PDT.
+  │ texinfo-7.0.2-2.fc38.aarch64 : Tools needed to create Texinfo format documentation files
+  │ Repo        : @System
+  │ Matched from:
+  │ Filename    : /usr/bin/makeinfo
+  └────
+
+  There you have it: from the output above, you can see the file
+  `/usr/bin/makeinfo' is part of the texinfo package!
+
+
+4.3 Installing the GNU TLS Library
+──────────────────────────────────
+
+  Let's run `./configure' yet again and see what happens! Anticipating
+  more errors, we'll run it much the same way as last time.
+
+  ┌────
+  │ ./configure --prefix=$HOME/emacs-29.1.90 2>&1 | tail -6
+  │ [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+  └────
+
+  ┌────
+  │ configure: error: The following required libraries were not found:
+  │      gnutls
+  │ Maybe some development libraries/packages are missing?
+  │ To build anyway, give:
+  │      --with-gnutls=ifavailable
+  │ as options to configure.
+  │ Configure failed!
+  └────
+
+  Oops, looks like we don't have the GnuTLS library installed. The GNU
+  Transport Layer Security library is the GNU implementation of the SSL
+  and TLS protocols, used for secure communication on the Internet. It's
+  how (for example) Emacs communicates with package archives like GNU
+  ELPA in a secure manner. As per usual, when we hit a snag like this,
+  we'll install the necessary package to resolve the dependency.
+
+  ┌────
+  │ sudo dnf install -y gnutls-devel >/dev/null 2>&1
+  └────
+  Listing 17: Install the the GnuTLS library
+
+  With libraries, it's helpful to know the traditional UNIX conventions
+  of how they're named. For example, if you had a library called `foo',
+  there would be a file somewhere in the filesystem named `libfoo.so'
+  which is the `foo' library in the /shared object/ format, and likely
+  another file named `libfoo.a' which is the same library the the
+  /archive/ format. Armed with this knowledge, you can use the
+  techniques we discussed in section 4.2 to determine that the GnuTLS
+  library is part of the `gnutls-devel' package.
+
+
+4.4 Installing the ncurses library
+──────────────────────────────────
+
+  Here we go again: another run of the `configure' program to learn what
+  our next missing dependency is!
+
+  ┌────
+  │ ./configure --prefix=$HOME/emacs-29.1.90 2>&1 | tail -6
+  │ [[ ${PIPESTATUS[0]} -ne 0 ]] && echo Configure failed!
+  └────
+
+  ┌────
+  │ configure: error: The required function 'tputs' was not found in any library.
+  │ The following libraries were tried (in order):
+  │   libtinfo, libncurses, libterminfo, libcurses, libtermcap
+  │ Please try installing whichever of these libraries is most appropriate
+  │ for your system, together with its header files.
+  │ For example, a libncurses-dev(el) or similar package.
+  │ Configure failed!
+  └────
+
+  Oops, looks like we don't have the `ncurses' library
+  installed. `ncurses' is a terminal control library for Unix-like
+  systems that allows you to do fancy terminal tricks required by
+  sophisticated TUI applications like Emacs. The original library was
+  named `curses' which is a bit of a pun on the term "cursor", which is
+  something the library lets you move around in an terminal-independent
+  fashion. Today we'll be installing `ncurses', which is the "new"
+  version of the library. We're using the term "new" loosely here, as
+  `ncurses' was originally released around 30 years ago.
+
+  ┌────
+  │ sudo dnf install -y ncurses-devel >/dev/null 2>&1
+  └────
+  Listing 19: Install the the ncurses library
+
+
+4.5 Finally, a minimal configuration
+────────────────────────────────────
+
+  I'm confident that we've worked out all the dependency issues, and now
+  we can successfully configure a minimal version of Emacs. The question
+  is, how minimal? What features are we getting and what features aren't
+  we getting? Let's change our arguments to to `configure' slightly to
+  find out. First we'll replace `tail' with a regular-expression `grep'
+  command to search for two spaces at the start of a line. This helps us
+  filter out much of the noise that the `./configure' script
+  generates. Towards the end of a successful run of the script, it
+  outputs a section prepended with two spaces that provides important
+  details of how Emacs is to be built. It's mostly which libraries are
+  found and used. If certain libraries aren't found, then certain
+  features are disabled. For example, if the X Windows libraries aren't
+  found, then Emacs will only run in TUI mode.
+
+  We'll also flip the logic with regard to the `$PIPESTATUS' array, and
+  we'll print a message on success rather than on failure.
+
+  ┌────
+  │ ./configure --prefix=$HOME/emacs-29.1.90 2>&1 | grep -E '^  '
+  │ [[ ${PIPESTATUS[0]} -eq 0 ]] && echo Configure succeeded!
+  └────
+
+  ┌────
+  │   Where should the build process find the source code?    .
+  │   What compiler should emacs be built with?               gcc -g3 -O2
+  │   Should Emacs use the GNU version of malloc?             no
+  │     (The GNU allocators don't work with this system configuration.)
+  │   Should Emacs use a relocating allocator for buffers?    no
+  │   Should Emacs use mmap(2) for buffer allocation?         no
+  │   What window system should Emacs use?                    none
+  │   What toolkit should Emacs use?                          none
+  │   Where do we find X Windows header files?                NONE
+  │   Where do we find X Windows libraries?                   NONE
+  │   Does Emacs use -lXaw3d?                                 no
+  │   Does Emacs use -lXpm?                                   no
+  │   Does Emacs use -ljpeg?                                  no
+  │   Does Emacs use -ltiff?                                  no
+  │   Does Emacs use a gif library?                           no 
+  │   Does Emacs use a png library?                           no 
+  │   Does Emacs use -lrsvg-2?                                no
+  │   Does Emacs use -lwebp?                                  no
+  │   Does Emacs use -lsqlite3?                               no
+  │   Does Emacs use cairo?                                   no
+  │   Does Emacs use -llcms2?                                 no
+  │   Does Emacs use imagemagick?                             no
+  │   Does Emacs use native APIs for images?                  no
+  │   Does Emacs support sound?                               yes
+  │   Does Emacs use -lgpm?                                   no
+  │   Does Emacs use -ldbus?                                  no
+  │   Does Emacs use -lgconf?                                 no
+  │   Does Emacs use GSettings?                               no
+  │   Does Emacs use a file notification library?             yes -lglibc (inotify)
+  │   Does Emacs use access control lists?                    no
+  │   Does Emacs use -lselinux?                               no
+  │   Does Emacs use -lgnutls?                                yes
+  │   Does Emacs use -lxml2?                                  no
+  │   Does Emacs use -lfreetype?                              no
+  │   Does Emacs use HarfBuzz?                                no
+  │   Does Emacs use -lm17n-flt?                              no
+  │   Does Emacs use -lotf?                                   no
+  │   Does Emacs use -lxft?                                   no
+  │   Does Emacs use -lsystemd?                               no
+  │   Does Emacs use -ljansson?                               no
+  │   Does Emacs use -ltree-sitter?                           no
+  │   Does Emacs use the GMP library?                         yes
+  │   Does Emacs directly use zlib?                           no
+  │   Does Emacs have dynamic modules support?                yes
+  │   Does Emacs use toolkit scroll bars?                     no
+  │   Does Emacs support Xwidgets?                            no
+  │   Does Emacs have threading support in lisp?              yes
+  │   Does Emacs support the portable dumper?                 yes
+  │   Does Emacs support legacy unexec dumping?               no
+  │   Which dumping strategy does Emacs use?                  pdumper
+  │   Does Emacs have native lisp compiler?                   no
+  │   Does Emacs use version 2 of the X Input Extension?      no
+  │   Does Emacs generate a smaller-size Japanese dictionary? no
+  │ Configure succeeded!
+  └────
+
+  As you can see, quite a lot of libraries are not found, and this is
+  indeed going to be a bare-bones build of Emacs! The process now, for
+  the adventurous reader who wants to build a much more feature complete
+  version of Emacs, is to research and install missing libraries until
+  the list shown above has a lot more lines that end in 'yes'. Part of
+  the fun is researching what the various libraries are and how Emacs
+  uses them. For example, did you know that `gconf' and `gsettings' are
+  two different ways of configuring Gnome applications, and if you
+  install the correct libraries you can build a version of Emacs that
+  allows you to make certain configuration changes using /both/ methods?
+  Crazy!
+
+  I'd be remiss if I didn't mention that the `./configure' script has a
+  `--help' option, and there are many options that begin with
+  `--with-<something>' that allow you to explicitly build in certain
+  features. There's a wealth of features and options to explore here!
+  Here's a taste:
+
+  ┌────
+  │ ./configure --help | grep -E '^  --with-'
+  └────
+  Listing 21: Run configure with the help option and only display the
+  –with-x options
+
+  ┌────
+  │ --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  │ --with-mailutils        rely on GNU Mailutils, so that the --without-pop
+  │ --with-pop              Support POP mail retrieval if Emacs movemail is used
+  │ --with-kerberos         support Kerberos-authenticated POP
+  │ --with-kerberos5        support Kerberos version 5 authenticated POP
+  │ --with-hesiod           support Hesiod to get the POP server host
+  │ --with-mail-unlink      unlink, rather than empty, mail spool after reading
+  │ --with-mailhost=HOSTNAME
+  │ --with-sound=VALUE      compile with sound support (VALUE one of: yes, alsa,
+  │ --with-pdumper=VALUE    enable pdumper support unconditionally ('yes', 'no',
+  │ --with-unexec=VALUE     enable unexec support unconditionally ('yes', 'no',
+  │ --with-dumping=VALUE    kind of dumping to use for initial Emacs build
+  │ --with-x-toolkit=KIT    use an X toolkit (KIT one of: yes or gtk, gtk2,
+  │ --with-wide-int         prefer wide Emacs integers (typically 62-bit); on
+  │ --with-cairo-xcb        use XCB surfaces for Cairo support
+  │ --with-imagemagick      compile with ImageMagick image support
+  │ --with-json             compile with native JSON support
+  │ --with-tree-sitter      compile with tree-sitter
+  │ --with-ns               use Nextstep (macOS Cocoa or GNUstep) windowing
+  │ --with-w32              use native MS Windows GUI in a Cygwin build
+  │ --with-pgtk             use GTK to support window systems other than X
+  │ --with-gconf            compile with Gconf support (Gsettings replaces this)
+  │ --with-cygwin32-native-compilation
+  │ --with-small-ja-dic     generate a smaller-size Japanese dictionary
+  │ --with-file-notification=LIB
+  │ --with-xwidgets         enable use of xwidgets in Emacs buffers (requires
+  │ --with-be-app           enable use of Haiku's Application Kit as a window
+  │ --with-be-cairo         enable use of cairo under Haiku's Application Kit
+  │ --with-gameuser=USER_OR_GROUP
+  │ --with-gnustep-conf=FILENAME
+  │ --with-native-compilation[=TYPE]
+  │ --with-x                use the X Window System
+  └────
+
+  When I build Emacs 29 I often include newer, sexy options like
+  `--with-pgtk', `--with-tree-sitter', and of course
+  `--with-native-compilation' which has been a /killer/ feature since
+  Emacs 28. Each of these options comes with its own trade-offs and
+  required dependencies you'll have to track down and install, so do
+  your homework!
+
+
+5 Building Emacs
+════════════════
+
+  Now that we've successfully configured a minimal version of Emacs, we
+  can actually build it. At this point, it's just a matter of running
+  `make && make install' and waiting. That said, there are a few tricks
+  to make things go faster. We can provide the `-j' flag to GNU Make to
+  specify the number of jobs (or commands) to run simultaneously,
+  letting us take advantage of all the CPU cores we might have sitting
+  idle. The `nproc' command returns the number of CPU processing units
+  that are available, and we can use this in conjunction with the `-j'
+  flags to unleash all our processing power on this build! If we set the
+  `MAKEFLAGS' environment variable prior to running `make', we can
+  ensure that our flags are passed along every time `make' recursively
+  calls itself during the process.
+
+  We'll redirect `stdout' and `stderr' to `/dev/null' as per usual to
+  avoid the copious output produced by `make', and we'll also echo a
+  message if the whole process completes successfully.
+
+  ┌────
+  │ MAKEFLAGS=-j$(nproc) make > /dev/null 2>&1 && echo Make ran successfully!
+  └────
+  Listing 22: Run make using all our available cores
+
+  ┌────
+  │ Make ran successfully!
+  └────
+
+
+5.1 Examining the Emacs binary
+──────────────────────────────
+
+  Now that we've successfully built the binary, let's find where it
+  lives on the filesystem. To that end, we'll use the `find' command
+  with the `-type f' predicate to indicate that we just want to find
+  regular files (as opposed to directories, sockets, or other unusual
+  filesystem objects).
+
+  ┌────
+  │ find . -type f -name emacs
+  └────
+  Listing 23: Find files named emacs
+
+  ┌────
+  │ ./src/emacs
+  └────
+
+  That's easy enough. Now let's run the `file' tool on it to see what
+  kind of file Linux thinks it is. Also, because the output can run
+  long, we'll pipe the it into `fmt -w 80' to wrap the output at 80
+  columns.
+
+  ┌────
+  │ file ./src/emacs | fmt -w 80
+  └────
+  Listing 24: Run the file command on the Emacs binary and wrap output
+  to 80 characters
+
+  ┌────
+  │ ./src/emacs: ELF 64-bit LSB pie executable, ARM aarch64, version 1
+  │ (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1,
+  │ BuildID[sha1]=5c6926b06d5083f898be19f5e62c35ba94276742, for GNU/Linux 3.7.0,
+  │ with debug_info, not stripped
+  └────
+
+  That definitely looks like a binary!
+
+
+5.2 Evaluate some Emacs Lisp code using the binary
+──────────────────────────────────────────────────
+
+  Now that we've validated that {{{s(find_emacs}}} is actually a binary,
+  let's see if we can get it to evaluate some Emacs lisp code! We'll run
+  the binary with the `-batch' and `-eval' options to have Emacs
+  evaluate some code and then immediately exit. The code we'll have it
+  evaluate prints the value of the `system-configuration-options'
+  variable to `stdout' using the `princ' function, which stands for
+  "print characters" and is for human-readable output, as opposed to
+  output meant to be read by Lisp itself.
+
+  ┌────
+  │ ./src/emacs -batch -eval '(princ system-configuration-options)'
+  └────
+  Listing 25: Evaluate some Emacs Lisp code using -batch and -eval
+
+  ┌────
+  │ --prefix=/home/mikeh/emacs-29.1.90
+  └────
+
+  Good news, looks like it's working!
+
+
+6 Installing Emacs
+══════════════════
+
+  Now that everything is built, and we've validated we have a working
+  binary, we can now install it!  No tricks here; we just run `make
+  install' and wait!
+
+  ┌────
+  │ make install >/dev/null 2>&1 && echo Make ran successfully!
+  └────
+  Listing 26: Install Emacs!
+
+  ┌────
+  │ Make ran successfully!
+  └────
+
+
+6.1 What did we install?
+────────────────────────
+
+  Let's take a look and see what got installed in our
+  `$HOME/emacs-29.1.90' directory. We'll use the `du' command to get an
+  idea of just how much stuff got installed into our `$HOME'
+  directory. We'll also pipe the output into `sort -rh' to reverse sort
+  the lines using the "human numeric sort", so that it groks the
+  difference between megabytes and kilobytes.
+
+  ┌────
+  │ cd $HOME/emacs-29.1.90
+  │ du -hs * | sort -rh
+  └────
+  Listing 27: Have du give us a summary of directory sizes in
+  human-readable format
+
+  ┌────
+  │ 108M	share
+  │ 22M	bin
+  │ 12M	libexec
+  │ 36K	include
+  │ 16K	lib
+  └────
+
+  It looks like the `share' directory is the biggest, clocking in at
+  108M!  That directory contains lots of ancillary files, such as icons,
+  images, text files like the `NEWS' and `JOKES' files, themes,
+  tutorials, a mountain of compiled and source Elisp code, and
+  documentation like refcards, info files, and manual pages.
+
+
+6.2 What's in the bin directory?
+────────────────────────────────
+
+  ┌────
+  │ cd $HOME/emacs-29.1.90/bin
+  │ ls -lh *
+  └────
+  Listing 28: Run ls with the long and human-readable size options
+
+  ┌────
+  │ -rwxr-xr-x 1 mikeh mikeh 447K Oct 25 05:20 ctags
+  │ -rwxr-xr-x 1 mikeh mikeh 199K Oct 25 05:20 ebrowse
+  │ lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 emacs -> emacs-29.1.90
+  │ -rwxr-xr-x 1 mikeh mikeh  21M Oct 25 05:20 emacs-29.1.90
+  │ -rwxr-xr-x 1 mikeh mikeh 230K Oct 25 05:20 emacsclient
+  │ -rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 etags
+  └────
+
+  Emacs helpfully comes with the main and client Emacs binaries, and
+  various programs from generating tags, as well as a program for
+  browsing C++ class hierarchies. I think our work here is done!
+
+
+7 Final Thoughts
+════════════════
+
+  I hope you've enjoyed reading this document! Hopefully it's also given
+  you the basics of building Emacs on Fedora systems, and the confidence
+  to explore creating your own perfect build of GNU Emacs!

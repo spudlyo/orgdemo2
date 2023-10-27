@@ -1,0 +1,11 @@
+* Sample Exports
+
+In this directory you'll find exported text files of both the Debian
+and RedHat versions of the document. They were exported from the
+[[https://gitlab.com/spudlyo/orgdemo2/-/raw/main/buildemacs.org?ref_type=heads][buildemacs.org]] file using the =org-ascii-publish-to-utf8= function.
+
+I have not committed any samples of the exported PDF files to the
+repository, but I have provided external links to them below.
+
+- [[https://muppetlabs.com/~mikeh/rh_buildemacs.pdf][RedHat specific PDF]]
+- [[https://muppetlabs.com/~mikeh/deb_buildemacs.pdf][Debian specific PDF]]
