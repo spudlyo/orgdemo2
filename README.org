@@ -19,3 +19,12 @@ systems.
 Throughout the document I do my best to not hardcode anything that
 appears in the output if any org-babel code blocks and try to keep
 everything as dynamic as possible.
+
+The document has two distinct audiences, the first of which are people
+who want to learn techniques for creating literate org-mode
+documents. The second is folks who want to learn techniques for building
+GNU Emacs on either RedHat or Debian based distributions.
+
+The first audience is served by reading the non-exported material in the
+org mode document, and the second is intended to read the exported
+document(s) which are all about building Emacs from source.
