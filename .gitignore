@@ -1,6 +1,6 @@
-*.html
-*.md
-*.pdf
-*.tex
-*.txt
+/*.html
+/*.md
+/*.pdf
+/*.tex
+/*.txt
 svg-inkscape/
