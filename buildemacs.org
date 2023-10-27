@@ -421,10 +421,11 @@ also known as Autotools. The =autoconf= tool reads the =./configure.ac= file we 
 to generate the =./configure= script we'll ultimately run.
 
 ** Running the autogen.sh script
-There is a script called =autogen.sh= that drives this process. It also modifies your cloned =.git/config= configuration
-file, as well as adding various hooks in =.git/hooks= that are suitable for Emacs development. Let's run the script and
-take a look at the first few lines of the output. We'll run =autogen.sh= with the =autoconf= argument to tell it to only
-generate the =./configure= script, to to leave our git configuration untouched.
+There is a script called =autogen.sh= that drives this process. It also modifies your cloned
+=.git/config= configuration file, as well as adding various hooks in =.git/hooks= that are suitable
+for Emacs development. Let's run the script and take a look at the first few lines of the
+output. We'll run =autogen.sh= with the =autoconf= argument to tell it to only generate the
+=./configure= script, to to leave our git configuration untouched.
 
 #+caption: Run the autogen.sh script and show a bit of the output
 #+name: autogen
@@ -442,8 +443,8 @@ Checking for autoconf (need at least version 2.65) ... missing
 It looks like we're going to need to install =autoconf= before this is going to work for us.
 
 *NOTE*: When we're installing software in this document, we'll often suppress the output like we do
-below by redirecting =stderr= and =stdout= to =/dev/null=. This is because the output is often quite long
-and irrelevant to the task at hand.
+below by redirecting =stderr= and =stdout= to =/dev/null=. This is because the output is often quite
+long and irrelevant to the task at hand.
 
 #+caption: Install autoconf and send the output to /dev/null
 #+name: install_autoconf
