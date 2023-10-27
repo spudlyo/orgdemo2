@@ -151,7 +151,7 @@ space available.
 
 #+caption: Install LaTeX Prerequisites on RedHat based systems
 #+name: rh_install_latex
-#+begin_src bash :results none :eval never-export :results output replace :dir ~/
+#+begin_src bash :results none :eval never-export :dir ~/
   sudo dnf install -y \
        texlive-latex \
        texlive-xetex \
