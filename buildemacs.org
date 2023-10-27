@@ -961,16 +961,17 @@ groks the difference between megabytes and kilobytes.
 #+caption: Have du give us a summary of directory sizes in human-readable format
 #+name: run_du
 #+begin_src bash
-  du -hs <<tag_dir()>>/* | sort -rh
+  cd <<tag_dir()>>
+  du -hs * | sort -rh
 #+end_src
 
-#+RESULTS[0174c5134c839087e3da1bc0594e1c2ec49b200c]: run_du
+#+RESULTS[77211e11c2ccbc12bb495675c1db79c406c543b4]: run_du
 #+begin_example
-108M	/home/mikeh/emacs-29.1.90/share
-22M	/home/mikeh/emacs-29.1.90/bin
-12M	/home/mikeh/emacs-29.1.90/libexec
-36K	/home/mikeh/emacs-29.1.90/include
-16K	/home/mikeh/emacs-29.1.90/lib
+108M	share
+22M	bin
+12M	libexec
+36K	include
+16K	lib
 #+end_example
 
 It looks like the =share= directory is the biggest, clocking in at call_lsplit[:results raw](run_du)!
@@ -983,17 +984,17 @@ refcards, info files, and manual pages.
 #+name: bin_dir
 #+begin_src bash
   cd <<tag_dir()>>/bin
-  ls -lh
+  ls -lh *
 #+end_src
 
-#+RESULTS[570d0bff0160ec0c3dc4cf090eb721fbca00c573]: bin_dir
+#+RESULTS[4f8360e8844d1063069f6e3cd346f5bc5fd1f650]: bin_dir
 #+begin_example
--rwxr-xr-x 1 mikeh mikeh 446K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/ctags
--rwxr-xr-x 1 mikeh mikeh 196K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/ebrowse
-lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/emacs -> emacs-29.1.90
--rwxr-xr-x 1 mikeh mikeh  21M Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/emacs-29.1.90
--rwxr-xr-x 1 mikeh mikeh 233K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/emacsclient
--rwxr-xr-x 1 mikeh mikeh 435K Oct 25 18:02 /home/mikeh/emacs-29.1.90/bin/etags
+-rwxr-xr-x 1 mikeh mikeh 447K Oct 25 05:20 ctags
+-rwxr-xr-x 1 mikeh mikeh 199K Oct 25 05:20 ebrowse
+lrwxrwxrwx 1 mikeh mikeh   13 Oct 25 05:20 emacs -> emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh  21M Oct 25 05:20 emacs-29.1.90
+-rwxr-xr-x 1 mikeh mikeh 230K Oct 25 05:20 emacsclient
+-rwxr-xr-x 1 mikeh mikeh 441K Oct 25 05:20 etags
 #+end_example
 
 Emacs helpfully comes with the main and client Emacs binaries, and various programs from generating
