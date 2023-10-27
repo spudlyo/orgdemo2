@@ -536,10 +536,10 @@ quickly identify where existing libraries are installed and which compiler flags
 #+caption: Install the build-essential meta-package and send the output to /dev/null
 #+name: deb_install_build_essential
 #+begin_src bash :dir ~/
-  sudo apt-get install -qq build-essential pkg-config >/dev/null 2>&1 || echo Failed to install!
+  sudo apt-get install -qq build-essential pkg-config >/dev/null 2>&1 || echo Failed!
 #+end_src
 
-#+RESULTS[aaf45c858e6cc023db94fc858a281c478489ff51]: deb_install_build_essential
+#+RESULTS[71eb0b9b623e17b403ba7ba05e1c19ea2ca65cc1]: deb_install_build_essential
 
 ** Installing GNU Texinfo
 Let's run =./configure= and see what happens. We'll provide our =--prefix= option and redirect =stderr= to
