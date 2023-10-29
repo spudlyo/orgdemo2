@@ -9,6 +9,9 @@ The main file in this repository is [[https://gitlab.com/spudlyo/orgdemo2/-/raw/
 raw version of the file in GitLab because it uses some fairly advanced
 Org-mode syntax that doesn't quite render perfectly in the UI.
 
+If you'd like to see what the document looks like when exported, you can
+check out the [[https://gitlab.com/spudlyo/orgdemo2/-/tree/main/exports][exports directory]] which has some samples.
+
 This file is the literate document that I'll be discussing at the
 talk. The exported document itself is a relatively simple guide on how
 to build GNU Emacs from scratch. What makes it interesting is that
